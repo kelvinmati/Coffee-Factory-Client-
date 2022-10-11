@@ -1,0 +1,24 @@
+* {
+  font-family: sans-serif;
+}
+
+.left {
+  width: 20%;
+}
+.leftt {
+  width: 10%;
+}
+
+.right {
+  width: 80%;
+}
+.rightt {
+  width: 90%;
+}
+.menu div {
+  cursor: pointer;
+  background-color: white;
+  height: 3px;
+  width: 30px;
+  margin: 6px;
+}
