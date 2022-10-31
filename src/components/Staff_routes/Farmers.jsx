@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { clearFarmer, getSpecificFarmer } from "../../redux/actions/auth";
-
 const Farmers = ({ farmers, admin }) => {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
@@ -12,7 +10,6 @@ const Farmers = ({ farmers, admin }) => {
   const [farmerId, setFarmerId] = useState("");
 
   // handle modal pop up
-
   const handleModal = (fullName, id) => {
     setOpen(true);
     setfullName(fullName);
@@ -93,6 +90,9 @@ const Farmers = ({ farmers, admin }) => {
             <th className="text-start py-2">Phone Number</th>
             <th className="text-start py-2">Quantity(Kgs)</th>
             <th className="text-start py-2">Date registered</th>
+
+            <th className="text-start py-2">Farmer Id</th>
+
             <th className="text-start py-2">Action</th>
           </tr>
         </thead>
@@ -100,8 +100,15 @@ const Farmers = ({ farmers, admin }) => {
           {farmers?.map((farmer, index) => {
             const even = index % 2 === 0;
             // console.log("even is", even);
-            const { _id, firstname, lastname, phone_number, email, createdAt } =
-              farmer;
+            const {
+              _id,
+              firstname,
+              lastname,
+              phone_number,
+              email,
+              createdAt,
+              farmerId,
+            } = farmer;
             const fullName = firstname.concat(" ", lastname);
 
             return (
@@ -111,6 +118,8 @@ const Farmers = ({ farmers, admin }) => {
                 <td className="py-3">{phone_number}</td>
                 <td className="py-3">90</td>
                 <td className="py-3">{createdAt}</td>
+                <td className="py-3">{farmerId}</td>
+
                 <td className="py-3">
                   <button
                     onClick={() => handleModal(fullName, _id)}

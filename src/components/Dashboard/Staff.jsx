@@ -3,9 +3,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Routes, Route, Link } from "react-router-dom";
 import { authUser, getAllFarmers } from "../../redux/actions/auth";
-import Farmers from "../adminRoutes/Farmers";
-import Home from "../adminRoutes/Home";
-const Admin = () => {
+// import Farmers from "../Staff_routes/Farmers";
+
+import Home from "../Staff_routes/Home";
+const Staff = () => {
   const [resize, setResize] = useState(false);
   const dispatch = useDispatch();
   // get all farmers
@@ -31,7 +32,7 @@ const Admin = () => {
   }, []);
 
   return (
-    <section className="contain ">
+    <section className="">
       <div
         //   className="left bg-blue fixed h-screen text-white p-3"
         className={
@@ -59,7 +60,7 @@ const Admin = () => {
           </div> */}
         </div>
         <ul className="mt-5">
-          <Link to="/dashboard/admin">
+          <Link to="/dashboard/staff">
             <li className="flex items-center space-x-2 rounded px-3 py-2 hover:bg-gray-50 hover:text-black">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +79,7 @@ const Admin = () => {
               <span>Home</span>
             </li>
           </Link>
-          <Link to="/dashboard/admin/farmers">
+          {/* <Link to="/dashboard/staff/farmers">
             <li className=" flex items-center space-x-2 rounded px-3 py-2 hover:bg-gray-50 hover:text-black">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +97,7 @@ const Admin = () => {
               </svg>
               <span>Farmers</span>
             </li>
-          </Link>
+          </Link> */}
 
           <li className=" flex  items-center space-x-2  cursor-pointer rounded px-3 py-2 hover:bg-gray-50 hover:text-black">
             <svg
@@ -126,11 +127,11 @@ const Admin = () => {
       >
         <main className="w-mobile mx-auto py-5">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route
+            <Route path="/" element={<Home farmers={farmers} />} />
+            {/* <Route
               path="/farmers"
               element={<Farmers farmers={farmers} admin={adminName} />}
-            />
+            /> */}
           </Routes>
         </main>
       </div>
@@ -138,5 +139,5 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default Staff;
 const loop = [1, 2, 3, 4];

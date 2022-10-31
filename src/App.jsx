@@ -4,14 +4,16 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 ("react-router-dom");
 import "./App.css";
 import AdminLogin from "./components/AdminLogin";
+import Admin from "./components/Dashboard/Admin";
 
-import Admin from "./components/dashboard/Admin";
-import Farmer from "./components/dashboard/Farmer";
-import Staff from "./components/dashboard/Farmer";
+import Farmer from "./components/Dashboard/Farmer";
+import Staff from "./components/Dashboard/Staff";
+
 import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Navbar from "./components/Navbar";
 import Register from "./components/Register";
+// import Farmers from "./components/Staff_routes/Farmers";
 import Auth from "./middleware/Auth";
 
 function App() {
@@ -26,8 +28,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route element={<Auth />}>
-            <Route path="/dashboard/farmer" element={<Farmer />} />
             <Route path="/dashboard/admin/*" element={<Admin />} />
+            <Route path="/dashboard/staff/*" element={<Staff />} />
+            <Route path="/dashboard/farmer" element={<Farmer />} />
           </Route>
         </Routes>
         {/* <Footer /> */}

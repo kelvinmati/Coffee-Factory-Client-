@@ -40,7 +40,8 @@ export const authUser = () => async (dispatch) => {
 
 // register user
 export const registerUser = (payload) => async (dispatch) => {
-  const { firstname, lastname, role, email, password, phone_number } = payload;
+  const { firstname, lastname, role, email, password, phone_number, gender } =
+    payload;
   // config
   const config = {
     headers: {
@@ -54,6 +55,7 @@ export const registerUser = (payload) => async (dispatch) => {
     email,
     password,
     phone_number,
+    gender,
   });
   try {
     const response = await axios.post(`${AUTH_API}/register`, body, config);
@@ -63,12 +65,15 @@ export const registerUser = (payload) => async (dispatch) => {
       dispatch({
         type: types.REGISTER_SUCCESS,
         payload: data,
+        msg: data?.message,
       });
       localStorage.setItem("userToken", data?.token);
+      // dispatch(getErrors(error.response.data, types.REGISTER_SUCCESS));
       toast.success(data.message);
     }
   } catch (error) {
     console.log(error.response.data);
+    dispatch(getErrors(error.response.data, types.REGISTER_FAIL));
     toast.error(error.response.data);
   }
 };
@@ -130,23 +135,46 @@ export const getSpecificFarmer = (farmerId) => async (dispatch) => {
       authToken()
     );
     const data = await response.data;
+    // console.log("data is", data);
+    dispatch({
+      type: types.GET_SPECIFIC_FARMER,
+      payload: data,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// get all staff
+export const getAllStaff = () => async (dispatch) => {
+  try {
+    const response = await axios.get(`${AUTH_API}/staff`, authToken());
+    const data = await response.data;
+    // console.log("all farmers", data);
     if (data) {
       dispatch({
-        type: types.GET_SPECIFIC_FARMER,
+        type: types.GET_ALL_STAFFS,
         payload: data,
       });
-      // dispatch(getSpecificFarmer());
     }
   } catch (error) {
     console.log(error);
   }
 };
-// clear farmer
-export const clearFarmer = () => (dispatch) => {
-  dispatch({
-    type: types.CLEAR_FARMER,
-  });
+
+// logout
+export const logout = () => (dispatch) => {
+  try {
+    localStorage.removeItem("userToken");
+    dispatch({
+      type: types.LOGOUT_SUCCESS,
+    });
+    toast.success("Your are now logged out");
+  } catch (error) {
+    console.log(error);
+  }
 };
+
 // admin login
 export const adminLogin = (payload) => async (dispatch) => {
   const { email, password } = payload;

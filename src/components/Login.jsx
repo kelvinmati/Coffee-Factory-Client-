@@ -49,14 +49,16 @@ const Login = () => {
     if (auth) {
       switch (role) {
         case "Staff":
-          return navigate("/dashboard/admin");
+          return navigate("/dashboard/staff");
         case "farmer":
           return navigate("/dashboard/farmer");
+        case "admin":
+          return navigate("/dashboard/admin");
       }
     } else {
       navigate("/login");
     }
-  }, [role]);
+  }, [role, auth]);
 
   return (
     <div
@@ -120,12 +122,6 @@ const Login = () => {
               <div>LOGIN</div>
             </button>
           </form>
-          <p className="text-center ">
-            Don't have an account?{" "}
-            <Link to="/register">
-              <span className="text-blue mx-2">Register</span>
-            </Link>
-          </p>
         </div>
       </div>
     </div>

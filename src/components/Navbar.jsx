@@ -17,11 +17,7 @@ const Navbar = () => {
           <div>
             <p className="uppercase">Ithe Mutiki Coffee Factory</p>
           </div>
-          <div className="space-x-5">
-            <Link to="/register">
-              <button className="bg-orange rounded px-4 py-2 ">Register</button>
-            </Link>
-
+          <div>
             <Link to="/login">
               <button className="bg-orange rounded px-4 py-2 ">Login</button>
             </Link>
@@ -32,7 +28,7 @@ const Navbar = () => {
             Your Favourite Coffee Factory Management System
           </p>
           <div>
-            <Link to="/register">
+            <Link to="/login">
               <button className="bg-orange py-4 px-6 rounded-full">
                 Get started
               </button>
