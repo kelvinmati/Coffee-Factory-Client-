@@ -67,9 +67,11 @@ export const registerUser = (payload) => async (dispatch) => {
         payload: data,
         msg: data?.message,
       });
-      localStorage.setItem("userToken", data?.token);
+      // localStorage.setItem("userToken", data?.token);
       // dispatch(getErrors(error.response.data, types.REGISTER_SUCCESS));
       toast.success(data.message);
+      // dispatch(getAllStaff());
+      // dispatch(getAllFarmers());
     }
   } catch (error) {
     console.log(error.response.data);

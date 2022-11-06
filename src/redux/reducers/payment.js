@@ -5,7 +5,7 @@ const initialState = {
   msg: null,
   transactions: null,
   transaction: null,
-  payable_farmers: null,
+  payable_farmers: [],
 };
 
 export const paymentReducer = (state = initialState, action) => {
@@ -13,6 +13,7 @@ export const paymentReducer = (state = initialState, action) => {
     case types.GET_PAYABLE_FARMERS:
       return {
         ...state,
+        loading: false,
         payable_farmers: action.payload,
       };
     case types.PAYMENT_SUCCESS:
@@ -22,11 +23,13 @@ export const paymentReducer = (state = initialState, action) => {
       };
     case types.GET_TRANSACTIONS:
       return {
+        ...state,
         loading: false,
         transactions: action.payload,
       };
     case types.GET_SINGLE_TRANSACTION:
       return {
+        ...state,
         loading: false,
         transaction: action.payload,
       };

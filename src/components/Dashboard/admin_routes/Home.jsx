@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-
+import { format } from "date-fns";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -13,11 +13,13 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { authToken, getAllStaff } from "../../../redux/actions/auth";
 
-const Home = () => {
+const Home = ({ farmers }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // load account balance
+
+  // get account balance
   const [balance, setBalance] = useState(0);
   const getAccBalance = async () => {
     try {
@@ -31,35 +33,60 @@ const Home = () => {
     }
   };
   getAccBalance();
-  // console.log("balance is", balance);
 
   // get  recent transactions
   useEffect(() => {
     dispatch(getAllTransactions());
   }, []);
-
   const Transactions = useSelector((state) => state?.payment?.transactions);
-  console.log("Transactions are", Transactions);
+  let filterNum = Transactions?.length - 7; /* filter from */
+  const recentTransactions = Transactions?.slice(
+    filterNum,
+    Transactions?.length
+  );
+  // get total amount paid
+  const totalArr = Transactions?.map((Transaction) => {
+    return Transaction?.amount;
+  });
+  const totalPaid = totalArr?.reduce((a, b) => {
+    return a + b;
+  });
+  // console.log("total is", totalPaid);
 
   // load all payable farmers
+  useEffect(() => {
+    dispatch(getPayableFarmers());
+  }, []);
+
+  // const loadPayableFarmers = useCallback(() => {
+  //   dispatch(getPayableFarmers());
+  // }, []);
   const payableFarmers = useSelector(
     (state) => state?.payment?.payable_farmers
   );
+  // console.log("payableFarmers", payableFarmers);
+
+  // get total staff
   useEffect(() => {
-    dispatch(getPayableFarmers());
-  }, [payableFarmers]);
+    dispatch(getAllStaff());
+  }, []);
+  const allStaff = useSelector((state) => state?.auth?.staff);
+
   // pay all farmers
   const [payButtonLoading, setPayButtonLoading] = useState(false);
   const handlePayment = async () => {
     setPayButtonLoading(true);
     try {
-      const response = await axios.get("http://localhost:4000/payment/pay-all");
+      const response = await axios.get(
+        "http://localhost:4000/payment/pay-all",
+        authToken()
+      );
       const data = response.data;
       if (data) {
         toast.success(data.message);
         setPayButtonLoading(false);
+        dispatch(getPayableFarmers());
       }
-      dispatch(getPayableFarmers());
     } catch (error) {
       console.log(error);
       toast.error(error.response.data.message);
@@ -70,106 +97,61 @@ const Home = () => {
     <section className="space-y-5">
       <div className="grid grid-cols-3 gap-5">
         <div className="shadow bg-yellow-400 rounded text-white text-lg  p-2 text-center space-y-2">
-          <div>Total Kg(s)</div>
+          <div>Total quantity</div>
           <div>
-            <span className="text-xl">20,000</span>
+            <span className="text-xl font-bold">20,000 Kgs</span>
           </div>
         </div>
-        <div className="shadow bg-green-400 rounded text-white text-lg  p-2 text-center space-y-2">
-          <div>Amount paid</div>
+        <div className="shadow bg-orange rounded text-white text-lg  p-2 text-center space-y-2">
+          <div>Total amount paid</div>
           <div>
-            <span className="text-xl">500,000</span>
+            <span className="text-xl font-bold">
+              {" "}
+              Ksh {totalPaid?.toLocaleString()}
+            </span>
           </div>
         </div>{" "}
-        <div className="shadow bg-blue rounded text-white text-lg  p-2 text-center space-y-2">
+        <div className="shadow bg-green-400 rounded text-white text-lg  p-2 text-center space-y-2">
           <div>Account balance</div>
           <div>
-            <span className="text-xl">{balance?.toLocaleString()}</span>
+            <span className="text-xl font-bold">
+              Ksh {balance?.toLocaleString()}
+            </span>
           </div>
         </div>
-        <div className="shadow  rounded text-lg bg-white py-5 px-2 text-center space-y-8">
+        <div className="shadow  rounded text-lg bg-white py-5 px-2 text-center space-y-4">
           <div>Total Farmers</div>
           <div>
-            <span className="text-xl ">85</span>
+            <span className="text-xl font-bold ">{farmers?.length || 0}</span>
           </div>
         </div>
-        <div className="shadow  rounded text-lg bg-white py-5 px-2 text-center space-y-8">
+        <div className="shadow  rounded text-lg bg-white py-5 px-2 text-center space-y-4">
           <div>Total Staff</div>
           <div>
-            <span className="text-xl ">5</span>
+            <span className="text-xl font-bold ">{allStaff?.length || 0}</span>
           </div>
         </div>{" "}
-        <div className="shadow  rounded text-lg bg-white py-5 px-2 text-center space-y-8">
+        {/* <div className="shadow  rounded text-lg bg-white py-5 px-2 text-center space-y-8">
           <div>Total Staff</div>
           <div>
             <span className="text-xl ">5</span>
           </div>
-        </div>
-      </div>
-      <div className="bg-white shadow-sm p-3 rounded-lg">
-        <table className=" w-full ">
-          <thead>
-            <tr>
-              <th className="text-start py-2">ID</th>
-              <th className="text-start py-2">Name</th>
-              <th className="text-start py-2">Kg(s)</th>
-              <th className="text-start py-2">Amount</th>
-              <th className="text-start py-2">Phone No</th>
-              <th className="text-start py-2">Date</th>
-              <th className="text-start py-2">Status</th>
-            </tr>
-          </thead>
-          <tbody className="text-start">
-            {Transactions?.map((Transaction, index) => {
-              const even = index % 2 === 0;
-              // console.log("even is", even);
-              const {
-                _id,
-                amount,
-                createdAt,
-                farmerId,
-                name,
-                phone,
-                quantity,
-              } = Transaction;
-              return (
-                <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
-                  <td className="py-3 ">{farmerId}</td>
-
-                  <td className="py-3 ">{name}</td>
-
-                  <td className="py-3 ">{quantity}</td>
-
-                  <td className="py-3">{amount}</td>
-
-                  <td className="py-3">{phone}</td>
-
-                  <td className="py-3">{createdAt}</td>
-                  <td className="py-3">
-                    <button className="bg-green-500 px-4 py-1.5 text-white rounded ">
-                      Paid
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        </div> */}
       </div>
       <div>
         <Accordion>
           <AccordionSummary
-            sx={{ borderBottom: "1px solid black" }}
+            sx={{ borderBottom: "1px solid gray" }}
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1a-content"
             id="panel1a-header"
           >
             <div>
-              <p className="text-xl font-bold">Check for payable farmers</p>
+              <p className="text-xl font-bold">Eligible farmers for payment.</p>
             </div>
           </AccordionSummary>
           {payableFarmers?.length == 0 ? (
-            <div className="p-4">No farmer at the moment</div>
+            <div className="p-4">No farmers at the moment.</div>
           ) : (
             <AccordionDetails>
               <div>
@@ -248,10 +230,65 @@ const Home = () => {
           )}
         </Accordion>
       </div>
+      <div className="bg-white shadow-sm p-3 rounded-lg">
+        <h2 className="my-2 py-2  border-b-[1px] border-gray-200 text-xl font-bold">
+          Recent Payments Made.
+        </h2>
+
+        <table className=" w-full ">
+          <thead>
+            <tr>
+              <th className="text-start py-2">ID</th>
+              <th className="text-start py-2">Name</th>
+              <th className="text-start py-2">Phone No</th>
+              <th className="text-start py-2">Quantity (Kgs)</th>
+              <th className="text-start py-2">Amount(Ksh)</th>
+              <th className="text-start py-2">Date Paid</th>
+            </tr>
+          </thead>
+          <tbody className="text-start">
+            {recentTransactions?.map((Transaction, index) => {
+              const even = index % 2 === 0;
+              // console.log("even is", even);
+              const {
+                _id,
+                amount,
+                createdAt,
+                farmerId,
+                name,
+
+                phone,
+                quantity,
+              } = Transaction;
+              return (
+                <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
+                  <td className="py-3 ">{farmerId}</td>
+                  <td className="py-3 ">{name}</td>
+                  <td className="py-3">{phone}</td>
+                  <td className="py-3">{quantity}</td>
+                  <td className="py-3">{amount}</td>
+                  <td className="py-3">
+                    {format(
+                      new Date(createdAt),
+                      "do MMM yyyy HH:mm:ss aaaaa'm'"
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div className="text-end my-3 text-blue">
+          <button
+            onClick={() => navigate("/dashboard/admin/payment")}
+            className="cursor-pointer"
+          >
+            Show more
+          </button>
+        </div>
+      </div>
     </section>
   );
 };
 
 export default Home;
-
-const loop = [1, 2, 3, 4, 5, 6, 7];

@@ -1,4 +1,5 @@
 import React from "react";
+import { format } from "date-fns";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllTransactions } from "../../../redux/actions/payment";
@@ -22,11 +23,10 @@ const Payment = () => {
             <tr>
               <th className="text-start py-2">ID</th>
               <th className="text-start py-2">Name</th>
-              <th className="text-start py-2">Kg(s)</th>
-              <th className="text-start py-2">Amount</th>
               <th className="text-start py-2">Phone No</th>
-              <th className="text-start py-2">Date</th>
-              <th className="text-start py-2">Status</th>
+              <th className="text-start py-2">Quantity (Kgs)</th>
+              <th className="text-start py-2">Amount</th>
+              <th className="text-start py-2">Date paid</th>
             </tr>
           </thead>
           <tbody className="text-start">
@@ -47,18 +47,18 @@ const Payment = () => {
                   <td className="py-3 ">{farmerId}</td>
 
                   <td className="py-3 ">{name}</td>
-
-                  <td className="py-3 ">{quantity}</td>
-
-                  <td className="py-3">{amount}</td>
-
                   <td className="py-3">{phone}</td>
 
-                  <td className="py-3">{createdAt}</td>
+                  <td className="py-3 ">{quantity?.toLocaleString()}</td>
+
+                  <td className="py-3">{amount?.toLocaleString()}</td>
+
                   <td className="py-3">
-                    <button className="bg-green-500 px-4 py-1.5 text-white rounded ">
-                      Paid
-                    </button>
+                    {" "}
+                    {format(
+                      new Date(createdAt),
+                      "do MMM yyyy HH:mm:ss aaaaa'm'"
+                    )}
                   </td>
                 </tr>
               );

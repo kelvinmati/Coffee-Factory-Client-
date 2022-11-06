@@ -24,15 +24,8 @@ const Register = () => {
     shouldFocusError: true,
   });
   const auth = useSelector((state) => state?.auth);
-  console.log("current user is", auth);
+  // console.log("current user is", auth);
 
-  // useEffect(() => {
-  //   if (auth?.isAuthenticated) {
-  //     navigate(`/dashboard/admin`);
-  //   } else {
-  //     navigate("/register");
-  //   }
-  // }, [auth?.isAuthenticated]);
   const onSubmit = (data) => {
     console.log(data);
     dispatch(registerUser(data));

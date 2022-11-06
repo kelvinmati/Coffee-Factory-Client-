@@ -115,7 +115,7 @@ const Farmer = () => {
             ) : (
               <button
                 onClick={() => setWithdrawModal(true)}
-                className="p-2 flex justify-center bg-orange text-white rounded"
+                className="p-2 flex justify-center bg-gray-200 text-black rounded"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -216,9 +216,9 @@ const Farmer = () => {
                   <tr>
                     <th className="text-start py-2">Name</th>
                     <th className="text-start py-2">ID</th>
+                    <th className="text-start py-2">Phone</th>
                     <th className="text-start py-2">Quantity(Kgs)</th>
                     <th className="text-start py-2">Amount</th>
-                    <th className="text-start py-2">Phone</th>
                     <th className="text-start py-2">Date paid</th>
                   </tr>
                 </thead>
@@ -241,9 +241,9 @@ const Farmer = () => {
                       >
                         <td className="py-3 ">{name}</td>
                         <td className="py-3 ">{farmerId}</td>
-                        <td className="py-3 ">{quantity}</td>
-                        <td className="py-3 ">{amount}</td>
                         <td className="py-3 ">{phone}</td>
+                        <td className="py-3 ">{quantity?.toLocaleString()}</td>
+                        <td className="py-3 ">{amount?.toLocaleString()}</td>
                         <td className="py-3">
                           {" "}
                           {format(
@@ -264,7 +264,7 @@ const Farmer = () => {
       <div
         className={
           withdrawModal
-            ? "fixed h-full bg-[rgba(0,0,0,0.11)] flex flex-col   items-center  left-0 right-0 top-0 bottom-0 pt-24"
+            ? "fixed h-full bg-[rgba(0,0,0,0.23)] flex flex-col   items-center  left-0 right-0 top-0 bottom-0 pt-24"
             : "hidden"
         }
       >

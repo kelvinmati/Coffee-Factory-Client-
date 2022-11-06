@@ -11,11 +11,11 @@ const Staff = () => {
   useEffect(() => {
     let subscribed = true;
     if (subscribed) {
-      loadFarmers();
+      loadStaff();
     }
     return () => (subscribed = false);
   }, []);
-  const loadFarmers = useCallback(() => {
+  const loadStaff = useCallback(() => {
     dispatch(getAllStaff());
   });
   const allStaff = useSelector((state) => state?.auth?.staff);
@@ -43,7 +43,7 @@ const Staff = () => {
               <th className="text-start py-2">Phone Number</th>
               <th className="text-start py-2">Gender</th>
 
-              <th className="text-start py-2">Date</th>
+              <th className="text-start py-2">Registered Date</th>
               <th className="text-start py-2">Action</th>
             </tr>
           </thead>
@@ -92,7 +92,7 @@ const Staff = () => {
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}
                         stroke="currentColor"
-                        className="w-8 h-8 bg-green-500 text-white rounded p-[2px] "
+                        className="w-7 h-7"
                       >
                         <path
                           strokeLinecap="round"
@@ -108,7 +108,7 @@ const Staff = () => {
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}
                         stroke="currentColor"
-                        className="w-8 h-8 bg-red text-white rounded p-[2px] "
+                        className="w-7 h-7 text-red"
                       >
                         <path
                           strokeLinecap="round"
