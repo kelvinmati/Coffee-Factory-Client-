@@ -6,6 +6,7 @@ const initialState = {
   transactions: null,
   transaction: null,
   payable_farmers: [],
+  account_details: null,
 };
 
 export const paymentReducer = (state = initialState, action) => {
@@ -32,6 +33,12 @@ export const paymentReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         transaction: action.payload,
+      };
+    case types.GET_ACC_DETAILS:
+      return {
+        ...state,
+        loading: false,
+        account_details: action.payload,
       };
     default:
       return state;

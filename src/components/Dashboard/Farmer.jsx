@@ -2,9 +2,12 @@ import React, { useEffect, useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { authUser, logout } from "../../redux/actions/auth";
 import { useNavigate } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
+import Test from "./Test";
+import Profile from "./Profile";
 const Farmer = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -81,7 +84,8 @@ const Farmer = () => {
       // console.log(error);
     }
   };
-
+  // profile modal
+  const [profileModal, setprofileModal] = useState(false);
   return (
     <section className="bg-gray-50  min-h-screen h-full pb-20">
       <nav className="bg-blue text-white h-[80px]">
@@ -92,7 +96,7 @@ const Farmer = () => {
           <div className="flex space-x-4">
             <button
               onClick={handleLogout}
-              className="p-2 flex justify-center bg-orange text-white rounded"
+              className="p-2 flex space-x-1 justify-center bg-orange text-white rounded"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +119,7 @@ const Farmer = () => {
             ) : (
               <button
                 onClick={() => setWithdrawModal(true)}
-                className="p-2 flex justify-center bg-gray-200 text-black rounded"
+                className="p-2 flex space-x-1 justify-center bg-gray-200 text-black rounded"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -135,6 +139,27 @@ const Farmer = () => {
                 <span>Withdraw</span>
               </button>
             )}
+
+            <button
+              onClick={() => setprofileModal(true)}
+              className="p-2 flex space-x-1 justify-center bg-white text-black rounded"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <span>Account</span>
+            </button>
           </div>
         </div>
       </nav>
@@ -146,7 +171,7 @@ const Farmer = () => {
             <div className="bg-white shadow rounded-lg py-4 px-2 text-center space-y-3">
               <h2 className="text-lg">Coffee quantity(Kgs)</h2>
 
-              <p className="text-2xl font-bold ">
+              <p className="text-2xl font-bold">
                 {currentFarmer?.totalKilos?.toLocaleString()}
               </p>
             </div>
@@ -214,11 +239,11 @@ const Farmer = () => {
               <table className=" w-full overflow-auto ">
                 <thead>
                   <tr>
-                    <th className="text-start py-2">Name</th>
+                    {/* <th className="text-start py-2">Name</th> */}
                     <th className="text-start py-2">ID</th>
                     <th className="text-start py-2">Phone</th>
                     <th className="text-start py-2">Quantity(Kgs)</th>
-                    <th className="text-start py-2">Amount</th>
+                    <th className="text-start py-2">Amount(Ksh)</th>
                     <th className="text-start py-2">Date paid</th>
                   </tr>
                 </thead>
@@ -239,7 +264,7 @@ const Farmer = () => {
                         key={_id}
                         className={even ? "bg-gray-50 " : "bg-white"}
                       >
-                        <td className="py-3 ">{name}</td>
+                        {/* <td className="py-3 ">{name}</td> */}
                         <td className="py-3 ">{farmerId}</td>
                         <td className="py-3 ">{phone}</td>
                         <td className="py-3 ">{quantity?.toLocaleString()}</td>
@@ -259,6 +284,23 @@ const Farmer = () => {
             </div>
           )}
         </div>
+        <div>
+          {/* <Routes>
+            <Route path="/profile" element={<Test />} />
+          </Routes> */}
+        </div>
+      </div>
+      <div
+        className={
+          profileModal
+            ? "fixed h-full bg-[rgba(0,0,0,0.23)] flex flex-col   items-center  left-0 right-0 top-0 bottom-0 pt-24"
+            : "hidden"
+        }
+      >
+        <Profile
+          currentUser={currentFarmer}
+          setprofileModal={setprofileModal}
+        />
       </div>
       {/* modal */}
       <div

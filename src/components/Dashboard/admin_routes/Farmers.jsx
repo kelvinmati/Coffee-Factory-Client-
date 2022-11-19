@@ -1,80 +1,61 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFarmers, getSpecificFarmer } from "../../../redux/actions/auth";
+import {
+  deleteUser,
+  getAllFarmers,
+  getSpecificFarmer,
+} from "../../../redux/actions/auth";
 import { makePayment } from "../../../redux/actions/payment";
 import RegisterForm from "../../Staff_routes/RegisterForm";
 import Upload_form from "../Upload_form";
 import { format } from "date-fns";
 import axios from "axios";
 import toast from "react-hot-toast";
+import UpdateModal from "../UpdateModal";
 const Farmers = ({ farmers, currentUser }) => {
   const dispatch = useDispatch();
-  console.log(farmers);
-  // get paid status
-  const paidStatus = farmers?.map((farmer) => {
-    // let status = farmer.paid ? "paid" : "not paid";
-    return farmer?.paid;
-  });
-  // console.log("paidStatus is", paidStatus?.[0]);
-
   const [registerModal, setRegisterModal] = useState(false);
-  // payment modal
-  const [paymentModal, setPaymentModal] = useState(false);
-  const [farmerId, setFarmerId] = useState(0);
-  const handlePaymentModal = (farmer) => {
-    setPaymentModal(true);
-    dispatch(getSpecificFarmer(farmer?._id));
-    setFarmerId(farmer?._id);
-  };
-  const closeModal = () => {
-    setPaymentModal(false);
-  };
-  const farmer = useSelector((state) => state?.auth?.farmer);
-  // console.log("farmer", farmer);
-
-  // set button loading
-  const ppayment = useSelector((state) => state?.payment?.msg);
-  const error = useSelector((state) => state?.errors);
-  const [buttonLoading, setButtonLoading] = useState(false);
-  const [paymentButtonLoading, setPaymentButtonLoading] = useState(false);
-
-  // console.log("ppayment message", ppayment);
-  useEffect(() => {
-    if (ppayment) {
-      setButtonLoading(false);
-      setPaymentModal(false);
-    }
-  }, [ppayment]);
-  useEffect(() => {
-    if (error.typeId === "PAYMENT_FAIL") {
-      setButtonLoading(false);
-    } else {
-      setButtonLoading(false);
-    }
-  }, [error]);
-  // make single payment
-  const handlePayment = () => {
-    dispatch(makePayment(farmerId));
-    setButtonLoading(true);
-  };
-
   // set upload form states
   const [isUploadFormOpen, setisUploadFormOpen] = useState(false);
-  const [id, setId] = useState("");
-  const openUploadModal = (id) => {
+  const [farmerObj, setFarmerObj] = useState({});
+  const openUploadModal = (farmer_info) => {
     setisUploadFormOpen(true);
-    setId(id);
-  };
-  // console.log("id is", id);
-  // close upload modal
-  const closeUploadModal = () => {
-    setisUploadFormOpen(false);
-    setId("");
+    setFarmerObj(farmer_info);
   };
   // delete modal
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteModal, setdeleteModal] = useState(false);
+  const [user, setUser] = useState({});
+  const { _id, firstname, lastname } = user;
+  const showDeleteModal = (user) => {
+    setdeleteModal(true);
+    setUser(user);
+  };
+  // console.log(firstname);
+
+  // delete functionality
+  const handleDelete = () => {
+    setDeleteLoading(true);
+    dispatch(deleteUser(_id));
+  };
+  const success_msg = useSelector((state) => state?.auth?.msg);
+  // console.log(" success_msg is", success_msg);
+  useEffect(() => {
+    if (success_msg == "User succesfully deleted") {
+      setDeleteLoading(false);
+      setdeleteModal(false);
+    }
+  }, [success_msg]);
+  // update modal
+  const [updateModal, setUpdateModal] = useState(false);
+  const [userDetails, setuserDetails] = useState({});
+  // console.log("updateModal", updateModal);
+  const showUpdateModal = (user) => {
+    setUpdateModal(true);
+    setuserDetails(user);
+  };
+  // console.log(" userDetails are", userDetails);
   return (
     <section className="space-y-0">
       <div className="flex justify-between items-center my-7">
@@ -134,47 +115,9 @@ const Farmers = ({ farmers, currentUser }) => {
                       "do MMM yyyy HH:mm:ss aaaaa'm'"
                     )}
                   </td>
-                  {/* <td className="py-3">
-                    {paid ? (
-                      <p className="text-green-400">Paid</p>
-                    ) : (
-                      <p className="text-yellow-400">Unpaid</p>
-                    )}
-                  </td> */}
 
                   <td className="py-3 space-x-2 ">
-                    {/* <button
-              
-                      disabled={paid ? true : false}
-                      onClick={() => handlePaymentModal(farmer)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        // className="w-6 h-6  text-green-700"
-                        className={
-                          paid
-                            ? "w-6 h-6  bg-green-700 rounded text-white cursor-not-allowed"
-                            : "w-6 h-6  text-yellow-400"
-                        }
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          // d=""
-                          d={
-                            paid
-                              ? "M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
-                              : "M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          }
-                        />
-                      </svg>
-         
-                    </button> */}
-                    <button onClick={() => openUploadModal(_id)}>
+                    <button onClick={() => openUploadModal(farmer)}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -190,7 +133,7 @@ const Farmers = ({ farmers, currentUser }) => {
                         />
                       </svg>
                     </button>
-                    <button>
+                    <button onClick={() => showUpdateModal(farmer)}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -207,7 +150,7 @@ const Farmers = ({ farmers, currentUser }) => {
                       </svg>
                     </button>
 
-                    <button onClick={() => setdeleteModal(true)}>
+                    <button onClick={() => showDeleteModal(farmer)}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -250,7 +193,7 @@ const Farmers = ({ farmers, currentUser }) => {
             : "hidden"
         }
       >
-        <div className="absolute top-10 right-16">
+        {/* <div className="absolute top-10 right-16">
           <button
             // onClick={() => setisUploadFormOpen(false)}
             onClick={closeUploadModal}
@@ -258,84 +201,15 @@ const Farmers = ({ farmers, currentUser }) => {
           >
             X
           </button>
-        </div>
-        {<Upload_form id={id} currentUser={currentUser} />}
-      </div>
-      {/* payment modal */}
-      <div
-        className={
-          paymentModal
-            ? "fixed h-full bg-[rgba(0,0,0,0.5)]   flex flex-col justify-center items-center  left-0 right-0 top-0 bottom-0"
-            : "hidden"
+        </div> */}
+        {
+          <Upload_form
+            farmerInfo={farmerObj}
+            closeUploadModal={setisUploadFormOpen}
+          />
         }
-      >
-        <div className="w-[40%] bg-white py-5 rounded px-3 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">Farmer Details</h2>
-            <div className="space-x-5">
-              <button onClick={closeModal} className="p-2 bg-gray-100 rounded">
-                CANCEL
-              </button>
-              {/* <button
-                onClick={handlePayment}
-                className="p-2 bg-orange  text-white rounded"
-              >
-                PAY NOW
-              </button> */}
-
-              <button
-                onClick={handlePayment}
-                disabled={buttonLoading ? true : false}
-                className={
-                  buttonLoading
-                    ? "bg-blue opacity-50 text-white p-2 rounded-lg"
-                    : "bg-blue  text-white p-2 rounded-lg"
-                }
-                // className="bg-blue  text-white p-2 rounded-lg"
-              >
-                {buttonLoading ? (
-                  <div className="flex justify-center items-center space-x-2">
-                    <div className="border-2 border-r-3  border-r-gray-600 animate-spin rounded-full w-5 h-5"></div>
-                    <span>Processing..</span>
-                  </div>
-                ) : (
-                  <div>PAY NOW</div>
-                )}
-              </button>
-            </div>
-          </div>
-          <div>
-            <label htmlFor="">Name</label>
-            <p className="border p-2 font-bold bg-gray-50">
-              {`${farmer?.firstname} ${farmer?.lastname}`}
-            </p>
-          </div>
-          <div>
-            <label htmlFor="">Farmer ID</label>
-            <p className="border p-2 font-bold bg-gray-50">
-              {farmer?.farmerId}
-            </p>
-          </div>
-          <div>
-            <label htmlFor="">Quantity(Kg)</label>
-            <p className="border p-2 font-bold bg-gray-50">
-              {farmer?.totalKilos}
-            </p>
-          </div>
-          <div>
-            <label htmlFor="">Amount</label>
-            <p className="border p-2 font-bold bg-gray-50">
-              {farmer?.value?.toLocaleString()}
-            </p>
-          </div>{" "}
-          <div>
-            <label htmlFor="">Phone Number</label>
-            <p className="border p-2 font-bold bg-gray-50">
-              {farmer?.phone_number}
-            </p>
-          </div>
-        </div>
       </div>
+
       {/* delete modal */}
       {/* modal */}
       <div
@@ -347,7 +221,7 @@ const Farmers = ({ farmers, currentUser }) => {
       >
         <div className="bg-white space-y-8 p-4 w-mobile md:w-[450px]  rounded shadow">
           <h2 className="text-xl  text-center">
-            Are you sure you want to delete Jane Wanjiku?
+            Are you sure you want to delete {firstname?.concat(" ", lastname)}?
           </h2>
 
           <div className="flex justify-end space-x-2">
@@ -360,11 +234,12 @@ const Farmers = ({ farmers, currentUser }) => {
               //     : "bg-blue  text-white p-2 rounded-lg"
               // }
               className="bg-red  text-white p-2 rounded-lg"
+              onClick={handleDelete}
             >
               {deleteLoading ? (
                 <div className="flex justify-center items-center space-x-2">
                   <div className="border-2 border-r-3  border-r-gray-600 animate-spin rounded-full w-5 h-5"></div>
-                  <span>Processing..</span>
+                  <span>Deleting..</span>
                 </div>
               ) : (
                 <div>Yes</div>
@@ -378,6 +253,19 @@ const Farmers = ({ farmers, currentUser }) => {
             </div>
           </div>
         </div>
+      </div>
+      {/* update modal */}
+      <div
+        className={
+          updateModal
+            ? "fixed h-full bg-[rgba(0,0,0,0.34)] flex flex-col justify-center  items-center  left-0 right-0 top-0 bottom-0 pt-24"
+            : "hidden"
+        }
+      >
+        <UpdateModal
+          userDetails={userDetails}
+          setUpdateModal={setUpdateModal}
+        />
       </div>
     </section>
   );

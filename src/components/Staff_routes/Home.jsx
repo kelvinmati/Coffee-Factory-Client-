@@ -1,100 +1,262 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+
 import RegisterForm from "./RegisterForm";
 import Upload_form from "../Dashboard/Upload_form";
-import { logout } from "../../redux/actions/auth";
 
-const Home = ({ farmers }) => {
+import axios from "axios";
+import toast from "react-hot-toast";
+import { getAccDetails, getPayableFarmers } from "../../redux/actions/payment";
+import { authToken, getAllFarmers } from "../../redux/actions/auth";
+
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+const Home = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
   // get current user
   const current = useSelector((state) => state?.auth?.current_user);
   const fullname = current?.firstname?.concat(" ", current?.lastname);
+  // get farmers
+  useEffect(() => {
+    dispatch(getAllFarmers());
+  }, []);
+  const farmers = useSelector((state) => state?.auth?.farmers);
+
   // show register form
   const [registerModal, setRegisterModal] = useState(false);
-  // handle logout
-  const auth = useSelector((state) => state?.auth?.isAuthenticated);
-  const handleLogout = () => {
-    dispatch(logout());
-  };
-  useEffect(() => {
-    if (!auth) {
-      return navigate("/login");
-    }
-  }, [auth]);
   // set upload form states
   const [isUploadFormOpen, setisUploadFormOpen] = useState(false);
-  const [id, setId] = useState("");
-  const openUploadModal = (id) => {
+  const [farmerObj, setFarmerObj] = useState({});
+  const openUploadModal = (farmer_info) => {
     setisUploadFormOpen(true);
-    setId(id);
+    setFarmerObj(farmer_info);
   };
 
-  // close upload modal
-  const closeUploadModal = () => {
-    setisUploadFormOpen(false);
-    setId("");
+  // load all payable farmers
+  const payableFarmers = useSelector(
+    (state) => state?.payment?.payable_farmers
+  );
+  useEffect(() => {
+    dispatch(getPayableFarmers());
+  }, []);
+  console.log("payableFarmers", payableFarmers);
+  // payable state
+  const [payableBtn, setPayableBtn] = useState(false);
+  useEffect(() => {
+    if (payableFarmers.length > 0) return setPayableBtn(true);
+  }, [payableFarmers]);
+  console.log("payableBtn is", payableBtn);
+  // handle payment for all
+  // const [buttonLoading, setbuttonLoading] = useState(false);
+  const [approvedBtn, setApprovedBtn] = useState(false);
+  const [waitingApproval, setwWaitingApproval] = useState(false);
+  const requestApproval = async () => {
+    setwWaitingApproval(true);
+    try {
+      const response = await axios.get(
+        "http://localhost:4000/payment/notify-manager"
+      );
+      const data = await response.data;
+      toast.success(data.message);
+      // setTimeout(() => {
+      //   setbuttonLoading(false);
+      // }, 4000);
+    } catch (error) {
+      console.log(error);
+    }
   };
+  // refresh
+  const [spinSvg, setSpinSvg] = useState(false);
+  const refresh = () => {
+    dispatch(getAccDetails());
+    setSpinSvg(true);
+    setTimeout(() => {
+      setSpinSvg(false);
+    }, 2000);
+  };
+  // // get approval details
+  const approval_msg = useSelector(
+    (state) => state?.payment?.account_details?.paymentApproval
+  );
+  // disable loading if payment is aproved
+  useEffect(() => {
+    if (approval_msg === "approved") {
+      setApprovedBtn(true);
+    } else {
+      setApprovedBtn(false);
+    }
+  }, [approval_msg]);
+  console.log("approvedBtn is", approvedBtn);
+
+  // get approval details
+  // const approval_amount = useSelector(
+  //   (state) => state?.payment?.account_details?.approvalAmount
+  // );
+  // // disable loading if payment is aproved
+  // useEffect(() => {
+  //   if (approval_amount > 0) {
+  //     setApprovedBtn(true);
+  //   } else {
+  //     setApprovedBtn(false);
+  //   }
+  // }, [approval_amount]);
+  // console.log("approval_amount is", approval_amount);
+  // pay after approval
+  const payAll = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:4000/payment/pay-all",
+        authToken()
+      );
+      const data = await response.data;
+      if (data) {
+        toast.success(data.message);
+        setApprovedBtn(false);
+        setwWaitingApproval(false);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  };
+  const [payButtonLoading, setPayButtonLoading] = useState(false);
   return (
-    <div>
-      <div
-        className=" flex justify-between  items-center h-16 border-b-[1px]
-             "
-      >
-        <div>
-          <p className="text-lg">Logged in as {fullname}</p>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="p-2 flex justify-center bg-blue text-white rounded"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-5 h-5"
+    <div className="space-y-8">
+      <div>
+        <Accordion>
+          <AccordionSummary
+            sx={{ borderBottom: "1px solid gray" }}
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="panel1a-content"
+            id="panel1a-header"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
-            />
-          </svg>
-          <span>Logout</span>
-        </button>
+            <div>
+              <p className="text-xl font-bold">Eligible farmers for payment.</p>
+            </div>
+          </AccordionSummary>
+          {payableFarmers?.length == 0 ? (
+            <div className="p-4">No farmers at the moment.</div>
+          ) : (
+            <AccordionDetails>
+              <div>
+                <div className="text-blue text-lg flex justify-between items-center my-5">
+                  <p>Payable farmers list ({payableFarmers?.length})</p>
+                  <div
+                    className={
+                      payableFarmers?.length == 0 ? "hidden" : "flex space-x-2"
+                    }
+                  >
+                    {approvedBtn ? (
+                      <button
+                        onClick={payAll}
+                        className=" bg-green-400 text-white p-2 rounded"
+                      >
+                        Approved Pay Now
+                      </button>
+                    ) : (
+                      <button
+                        onClick={waitingApproval ? refresh : requestApproval}
+                        className={
+                          waitingApproval
+                            ? "bg-yellow-400 p-2 rounded text-white text-lg"
+                            : "bg-gray-100 hover:bg-gray-100 text-black p-2 rounded"
+                        }
+                      >
+                        {waitingApproval ? (
+                          <div className="flex justify-center items-center space-x-2">
+                            <span>Pending Approval</span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className={
+                                spinSvg ? "w-6 h-6 animate-spin" : "w-6 h-6"
+                              }
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                              />
+                            </svg>
+                          </div>
+                        ) : (
+                          <div>Pay All Farmers</div>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <table className=" w-full ">
+                  <thead>
+                    <tr>
+                      <th className="text-start py-2">ID</th>
+                      <th className="text-start py-2">Name</th>
+                      <th className="text-start py-2">Email</th>
+                      <th className="text-start py-2">Phone No</th>
+                      <th className="text-start py-2">Gender</th>
+
+                      <th className="text-start py-2">Kg(s)</th>
+                      <th className="text-start py-2">Amount (Ksh)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-start">
+                    {payableFarmers?.map((payableFarmer, index) => {
+                      const even = index % 2 === 0;
+
+                      const {
+                        _id,
+                        value,
+                        firstname,
+                        lastname,
+                        farmerId,
+                        email,
+                        phone_number,
+                        totalKilos,
+                        gender,
+                      } = payableFarmer;
+                      const fullname = `${firstname} ${lastname}`;
+                      return (
+                        <tr
+                          key={_id}
+                          className={even ? "bg-gray-50 " : "bg-white"}
+                        >
+                          <td className="py-3 ">{farmerId}</td>
+                          <td className="py-3 ">{fullname}</td>
+                          <td className="py-3 ">{email}</td>
+                          <td className="py-3">{phone_number}</td>
+                          <td className="py-3">{gender}</td>
+                          <td className="py-3">
+                            {totalKilos?.toLocaleString()}
+                          </td>
+                          <td className="py-3">{value?.toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </AccordionDetails>
+          )}
+        </Accordion>
       </div>
 
-      <div className="grid grid-cols-2 gap-5 justify-between items-center my-6">
-        <div className="">
-          <button
-            onClick={() => setRegisterModal(true)}
-            className="p-2 bg-orange text-white rounded"
-          >
-            Add Farmer
-          </button>
-        </div>
-        <div>
-          {/* <h2 className="text-xl text-blue  w-full">Manage farmers</h2> */}
-          <input
-            type="text"
-            className="p-2 rounded w-full focus:outline-blue"
-            placeholder="Search for farmers here.."
-          />
-        </div>
-        {/* <div className="text-right">
-          <button
-            onClick={() => setRegisterModal(true)}
-            className="p-2 bg-orange text-white rounded"
-          >
-            Add Farmer
-          </button>
-        </div> */}
-      </div>
       <div className="bg-white shadow-sm p-3 rounded-lg">
-        <h1 className="text-xl text-blue py-3">Farmers</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl text-blue py-3">Farmers</h1>
+          <div className="">
+            <button
+              onClick={() => setRegisterModal(true)}
+              className="p-2 bg-orange text-white rounded"
+            >
+              Add Farmer
+            </button>
+          </div>
+        </div>
 
         <table className=" w-full ">
           <thead>
@@ -103,7 +265,7 @@ const Home = ({ farmers }) => {
               <th className="text-start py-2">Farmer ID</th>
               <th className="text-start py-2">Email</th>
               <th className="text-start py-2">Phone Number</th>
-              <th className="text-start py-2">Quantity(KGs)</th>
+              <th className="text-start py-2">Quantity</th>
               <th className="text-start py-2">Action</th>
             </tr>
           </thead>
@@ -120,7 +282,9 @@ const Home = ({ farmers }) => {
                 createdAt,
                 totalKilos,
                 farmerId,
+                value,
               } = farmer;
+
               const fullName = firstname.concat(" ", lastname);
               return (
                 <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
@@ -130,12 +294,12 @@ const Home = ({ farmers }) => {
                   <td className="py-3">{phone_number}</td>
                   <td className="py-3">{totalKilos}</td>
 
-                  <td className="py-3">
+                  <td className="py-3 flex space-x-4">
                     <button
                       // onClick={() => handleModal(fullName, _id)}
                       // onClick={handleModal}
-                      onClick={() => openUploadModal(_id)}
-                      className="flex items-center space-x-1 bg-orange text-white rounded p-1 "
+                      onClick={() => openUploadModal(farmer)}
+                      className="flex items-center space-x-1 bg-orange text-white  rounded p-1 "
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -143,12 +307,12 @@ const Home = ({ farmers }) => {
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}
                         stroke="currentColor"
-                        className="w-4 h-4 text-blue"
+                        className="w-6 h-6 "
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
+                          d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3V15"
                         />
                         <path
                           strokeLinecap="round"
@@ -156,7 +320,37 @@ const Home = ({ farmers }) => {
                           d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                      <span>manage</span>
+                      <span>upload</span>
+                    </button>
+                    <button
+                      // onClick={() => openUploadModal(farmer)}
+
+                      className={
+                        value == 0
+                          ? "hidden"
+                          : "flex items-center space-x-1 bg-green-500 text-white  rounded p-1"
+                      }
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="w-6 h-6 "
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3V15"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <span>Pay</span>
                     </button>
                   </td>
                 </tr>
@@ -179,22 +373,6 @@ const Home = ({ farmers }) => {
       </div>
 
       {/* coffee upload form */}
-      {/* <div
-        className={
-          uploadModal
-            ? "bg-[rgba(0,0,0,0.5)] bg-blend-multiply  flex  justify-center items-center fixed left-0 right-0 h-full  top-0 "
-            : "hidden"
-        }
-      >
-        {
-          <UploadForm
-            setUploadModal={setUploadModal}
-            farmerIdentity={farmerIdentity}
-          />
-        }
-      </div> */}
-
-      {/* coffee upload form */}
       <div
         className={
           isUploadFormOpen
@@ -202,15 +380,12 @@ const Home = ({ farmers }) => {
             : "hidden"
         }
       >
-        <div className="absolute top-10 right-16">
-          <button
-            onClick={closeUploadModal}
-            className="bg-white w-16 h-16 rounded-full p-2 text-black text-bold text-4xl"
-          >
-            X
-          </button>
-        </div>
-        {<Upload_form id={id} currentUser={fullname} />}
+        {
+          <Upload_form
+            farmerInfo={farmerObj}
+            closeUploadModal={setisUploadFormOpen}
+          />
+        }
       </div>
     </div>
   );

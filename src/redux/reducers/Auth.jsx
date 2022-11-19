@@ -8,7 +8,8 @@ const initialState = {
   user: null,
   staff: null,
   current_user: null,
-  admin: null,
+  updateLoading: true,
+  isSucessful: false,
 };
 export const AuthReducer = (state = initialState, action) => {
   switch (action.type) {
@@ -52,11 +53,17 @@ export const AuthReducer = (state = initialState, action) => {
         loading: false,
         farmer: action.payload,
       };
-    // admin login
-    case types.ADMIN_LOGIN_SUCCESS:
+    case types.UPDATE_USER:
+    case types.DELETE_USER:
+    case types.COFFEE_UPLOAD:
       return {
         ...state,
-        admin: action.payload,
+        msg: action.payload,
+      };
+    case types.CLEAR_SUCCESS_MSG:
+      return {
+        ...state,
+        msg: null,
       };
     default:
       return state;

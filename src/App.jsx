@@ -31,7 +31,7 @@ function App() {
           <Route element={<Auth />}>
             <Route path="/dashboard/admin/*" element={<Admin />} />
             <Route path="/dashboard/staff/*" element={<Staff />} />
-            <Route path="/dashboard/farmer" element={<Farmer />} />
+            <Route path="/dashboard/farmer/*" element={<Farmer />} />
           </Route>
         </Routes>
         {/* <Footer /> */}

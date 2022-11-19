@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { getAllStaff } from "../../../redux/actions/auth";
 import RegisterForm from "../../Staff_routes/RegisterForm";
 import { format } from "date-fns";
+import UpdateModal from "../UpdateModal";
 const Staff = () => {
   const dispatch = useDispatch();
   const [registerModal, setRegisterModal] = useState(false);
@@ -19,7 +20,17 @@ const Staff = () => {
     dispatch(getAllStaff());
   });
   const allStaff = useSelector((state) => state?.auth?.staff);
-  console.log("staff are", allStaff);
+  // console.log("staff are", allStaff);
+
+  // update modal
+  const [updateModal, setUpdateModal] = useState(false);
+  const [userDetails, setuserDetails] = useState({});
+  // console.log("updateModal", updateModal);
+  const showUpdateModal = (user) => {
+    setUpdateModal(true);
+    setuserDetails(user);
+  };
+  console.log(" userDetails are", userDetails);
   return (
     <section>
       <div className="flex justify-between items-center my-7">
@@ -85,7 +96,7 @@ const Staff = () => {
                   </td>
 
                   <td className="py-3 flex justify-evenly">
-                    <button>
+                    <button onClick={() => showUpdateModal(staf)}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -135,6 +146,19 @@ const Staff = () => {
         <div className="bg-white space-y-4 p-3 w-mobile md:w-[500px]  rounded shadow">
           {<RegisterForm setRegisterModal={setRegisterModal} />}
         </div>
+      </div>
+      {/* update modal */}
+      <div
+        className={
+          updateModal
+            ? "fixed h-full bg-[rgba(0,0,0,0.34)] flex flex-col justify-center  items-center  left-0 right-0 top-0 bottom-0 pt-24"
+            : "hidden"
+        }
+      >
+        <UpdateModal
+          userDetails={userDetails}
+          setUpdateModal={setUpdateModal}
+        />
       </div>
     </section>
   );

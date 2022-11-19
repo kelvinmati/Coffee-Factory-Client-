@@ -5,35 +5,19 @@ import { format } from "date-fns";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Typography from "@mui/material/Typography";
 import {
   getAllTransactions,
   getPayableFarmers,
 } from "../../../redux/actions/payment";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { authToken, getAllStaff } from "../../../redux/actions/auth";
 
-const Home = ({ farmers }) => {
+const Home = ({ farmers, balance }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  // get account balance
-  const [balance, setBalance] = useState(0);
-  const getAccBalance = async () => {
-    try {
-      const response = await axios.get("http://localhost:4000/account/balance");
-      const data = await response.data;
-      if (data) {
-        setBalance(data);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  getAccBalance();
-
   // get  recent transactions
   useEffect(() => {
     dispatch(getAllTransactions());
@@ -57,10 +41,6 @@ const Home = ({ farmers }) => {
   useEffect(() => {
     dispatch(getPayableFarmers());
   }, []);
-
-  // const loadPayableFarmers = useCallback(() => {
-  //   dispatch(getPayableFarmers());
-  // }, []);
   const payableFarmers = useSelector(
     (state) => state?.payment?.payable_farmers
   );
@@ -78,7 +58,7 @@ const Home = ({ farmers }) => {
     setPayButtonLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:4000/payment/pay-all",
+        "http://localhost:4000/payment/pay-all-mng",
         authToken()
       );
       const data = response.data;
@@ -96,12 +76,12 @@ const Home = ({ farmers }) => {
   return (
     <section className="space-y-5">
       <div className="grid grid-cols-3 gap-5">
-        <div className="shadow bg-yellow-400 rounded text-white text-lg  p-2 text-center space-y-2">
+        {/* <div className="shadow bg-yellow-400 rounded text-white text-lg  p-2 text-center space-y-2">
           <div>Total quantity</div>
           <div>
             <span className="text-xl font-bold">20,000 Kgs</span>
           </div>
-        </div>
+        </div> */}
         <div className="shadow bg-orange rounded text-white text-lg  p-2 text-center space-y-2">
           <div>Total amount paid</div>
           <div>
@@ -157,12 +137,6 @@ const Home = ({ farmers }) => {
               <div>
                 <div className="text-blue text-lg flex justify-between items-center my-5">
                   <p>Payable farmers list ({payableFarmers?.length})</p>
-                  {/* <button
-                    onClick={handlePayment}
-                    className="p-2 bg-orange text-white rounded"
-                  >
-                    Pay All Farmers
-                  </button> */}
                   <button
                     onClick={handlePayment}
                     className="p-2 bg-orange text-white rounded"
@@ -256,7 +230,6 @@ const Home = ({ farmers }) => {
                 createdAt,
                 farmerId,
                 name,
-
                 phone,
                 quantity,
               } = Transaction;

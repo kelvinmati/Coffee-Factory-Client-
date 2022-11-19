@@ -1,5 +1,6 @@
 import axios from "axios";
 import toast from "react-hot-toast";
+
 import * as types from "../Types";
 import { getErrors, loginFail } from "./errors";
 const AUTH_API = "http://localhost:4000/user";
@@ -177,9 +178,10 @@ export const logout = () => (dispatch) => {
   }
 };
 
-// admin login
-export const adminLogin = (payload) => async (dispatch) => {
-  const { email, password } = payload;
+// user update
+
+export const updateUser = (id, payload) => async (dispatch) => {
+  const { firstname, lastname, phone_number, password, gender } = payload;
   // config
   const config = {
     headers: {
@@ -188,23 +190,83 @@ export const adminLogin = (payload) => async (dispatch) => {
   };
   // request body
   const body = JSON.stringify({
-    email,
+    firstname,
+    lastname,
+    phone_number,
     password,
+    gender,
   });
   try {
+    const response = await axios.put(`${AUTH_API}/update/${id}`, body, config);
+    const data = await response.data;
+    await dispatch({
+      type: types.UPDATE_USER,
+      payload: data.message,
+    });
+    toast.success(data.message);
+    dispatch(getAllFarmers());
+    dispatch(getAllStaff());
+    dispatch(authUser());
+    dispatch({
+      type: types.CLEAR_SUCCESS_MSG,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+// delete user
+export const deleteUser = (user_id) => async (dispatch) => {
+  try {
+    const response = await axios.delete(`${AUTH_API}/delete-user/${user_id}`);
+    const data = await response.data;
+    await dispatch({
+      type: types.DELETE_USER,
+      payload: data.message,
+    });
+    toast.success(data.message);
+    dispatch(getAllFarmers());
+    dispatch({
+      type: types.CLEAR_SUCCESS_MSG,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+// coffee upload
+export const coffeeUpload = (farmerId, payload) => async (dispatch) => {
+  const { coffee_type, quantity } = payload;
+  // config
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  // body
+  const body = JSON.stringify({
+    coffee_type,
+    quantity,
+  });
+
+  try {
     const response = await axios.post(
-      `http://localhost:4000/admin/admin-login`,
-      config,
-      body
+      `http://localhost:4000/user/farmer-upload/${farmerId}`,
+      body,
+      config
     );
     const data = await response.data;
     if (data) {
+      await dispatch({
+        type: types.COFFEE_UPLOAD,
+        payload: data.message,
+      });
+      toast.success(data.message);
+      dispatch(getAllFarmers());
       dispatch({
-        type: types.ADMIN_LOGIN_SUCCESS,
-        payload: data,
+        type: types.CLEAR_SUCCESS_MSG,
       });
     }
   } catch (error) {
-    console.log(error.response);
+    console.log(error);
   }
 };

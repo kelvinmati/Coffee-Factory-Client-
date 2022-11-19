@@ -72,3 +72,19 @@ export const getSingleTransaction = (farmerId) => async (dispatch) => {
     console.log(error);
   }
 };
+
+// get account details
+export const getAccDetails = () => async (dispatch) => {
+  try {
+    const response = await axios.get("http://localhost:4000/account/details");
+    const data = response.data;
+    if (data) {
+      dispatch({
+        type: types.GET_ACC_DETAILS,
+        payload: data,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};

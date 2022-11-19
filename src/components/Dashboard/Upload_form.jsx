@@ -1,20 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFarmers, getSpecificFarmer } from "../../redux/actions/auth";
-import axios from "axios";
-import toast from "react-hot-toast";
-const Upload_form = ({ id, currentUser }) => {
-  // console.log("Current user is", currentUser);
-  const dispatch = useDispatch();
-  // console.log("upload id is", id);
-  // get specific farmer
-  useEffect(() => {
-    dispatch(getSpecificFarmer(id));
-  }, [id]);
-  const farmer = useSelector((state) => state?.auth?.farmer);
-  // console.log("farmer is", farmer);
+import { coffeeUpload } from "../../redux/actions/auth";
+import { getPayableFarmers } from "../../redux/actions/payment";
 
+const Upload_form = ({ farmerInfo, closeUploadModal }) => {
+  const dispatch = useDispatch();
   // initialize react hook form
   const {
     register,
@@ -26,57 +17,37 @@ const Upload_form = ({ id, currentUser }) => {
     shouldUnregister: true,
     shouldFocusError: true,
   });
-  const [buttonLoading, setbuttonLoading] =
-    useState(false); /*set button loading */
+  const [buttonLoading, setbuttonLoading] = useState(false); //set loading state
   // upload farmers data
   const onSubmit = async (data) => {
     setbuttonLoading(true);
-    const { coffee_type, quantity } = data;
-    // config
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-
-    // body
-    const body = JSON.stringify({
-      coffee_type,
-      quantity,
-    });
-
-    try {
-      const response = await axios.post(
-        `http://localhost:4000/user/farmer-upload/${id}`,
-        body,
-        config
-      );
-      const data = await response.data;
-      if (data) {
-        toast.success(data?.returnedFarmer?.message);
-        setbuttonLoading(false);
-        dispatch(getSpecificFarmer(id));
-        dispatch(getAllFarmers());
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    dispatch(coffeeUpload(farmerInfo?._id, data));
+    dispatch(getPayableFarmers());
   };
+  // stop button loading
+  const success_msg = useSelector((state) => state?.auth?.msg);
+  useEffect(() => {
+    if (success_msg == "Succesfully uploaded") {
+      setbuttonLoading(false);
+      closeUploadModal(false);
+      reset();
+    }
+  }, [success_msg]);
   return (
-    <section className="grid grid-cols-2 items-center gap-3 bg-white shadow w-mobile md:w-[70%] ">
+    <section className="grid grid-cols-2  gap-3 bg-white shadow w-mobile md:w-[70%] ">
       <div className="bg-blue p-3 text-white space-y-2">
         <h2 className="uppercase text-center bg-white text-black rounded p-2 font-bold">
-          {`${farmer?.firstname} ${farmer?.lastname}`}
+          {`${farmerInfo?.firstname} ${farmerInfo?.lastname}`}
         </h2>
         <div>
           <h2 className="text-lg text-orange">Weight and value</h2>
-          <h2>Total kgs: {farmer?.totalKilos?.toLocaleString()}</h2>
-          <h2>Total Amount: Ksh {farmer?.value?.toLocaleString()}</h2>
+          <h2>Total kgs: {farmerInfo?.totalKilos?.toLocaleString()}</h2>
+          <h2>Total Amount: Ksh {farmerInfo?.value?.toLocaleString()}</h2>
         </div>
         <div>
           <h2 className="text-lg text-orange">Delivery records</h2>
         </div>
-        {farmer?.coffeeDetails?.length == 0 ? (
+        {farmerInfo?.coffeeDetails?.length == 0 ? (
           <div className="h-[220px]">
             {" "}
             <h2>No deliveries yet</h2>
@@ -92,7 +63,7 @@ const Upload_form = ({ id, currentUser }) => {
                 </tr>
               </thead>
               <tbody className="text-start">
-                {farmer?.coffeeDetails?.map((coffeeDetail, index) => {
+                {farmerInfo?.coffeeDetails?.map((coffeeDetail, index) => {
                   return (
                     <tr key={index}>
                       <td className="py-3 text-center ">
@@ -123,7 +94,7 @@ const Upload_form = ({ id, currentUser }) => {
                   className="border p-2 focus:outline-blue rounded"
                 /> */}
               <select
-                className=" p-2 bg-white border rounded"
+                className=" p-2 bg-white border rounded "
                 {...register("coffee_type", {
                   required: true,
                 })}
@@ -154,34 +125,20 @@ const Upload_form = ({ id, currentUser }) => {
                 <p className="text-red">Quantity is required</p>
               )}
             </div>
-            <div className="flex flex-col ">
-              <label>Served by</label>
-              {/* <input
-                // disabled
-                type="text"
-                // value={currentUser}
-                className="border p-2 focus:outline-blue rounded"
-                {...register(
-                  "served_by",
-
-                  {
-                    required: false,
-                  }
-                )}
-              /> */}
-              <p className="border p-2 focus:outline-blue rounded">
-                {currentUser}
-              </p>
-            </div>
-
-            <div className="text-end">
+            <div className="flex justify-end space-x-4">
+              <span
+                onClick={() => closeUploadModal(false)}
+                className="bg-gray-200 cursor-pointer hover:bg-gray-300 text-black p-2 rounded"
+              >
+                Close
+              </span>
               <button
                 type="submit"
                 disabled={buttonLoading ? true : false}
                 className={
                   buttonLoading
-                    ? "bg-blue opacity-50 text-white p-2 rounded-lg"
-                    : "bg-blue  text-white p-2 rounded-lg"
+                    ? "bg-blue opacity-50 text-white p-2 rounded "
+                    : "bg-blue  text-white p-2 rounded "
                 }
                 // className="bg-blue  text-white p-2 rounded-lg"
               >
@@ -195,21 +152,6 @@ const Upload_form = ({ id, currentUser }) => {
                 )}
               </button>
             </div>
-            {/* <div>
-              <button
-                type="submit"
-                className="border-0 p-2 w-full rounded bg-blue text-white"
-              >
-                {buttonLoading ? (
-                  <div className="flex justify-center items-center  space-x-2">
-                    <div className="border-2 border-r-3  border-r-gray-600 animate-spin rounded-full w-6 h-6"></div>
-                    <span>Please wait..</span>
-                  </div>
-                ) : (
-                  <div>SUBMIT</div>
-                )}
-              </button>
-            </div> */}
           </form>
         </div>
       </div>
