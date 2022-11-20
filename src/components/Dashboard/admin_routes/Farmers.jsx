@@ -6,7 +6,7 @@ import {
   getAllFarmers,
   getSpecificFarmer,
 } from "../../../redux/actions/auth";
-import { makePayment } from "../../../redux/actions/payment";
+// import { makePayment } from "../../../redux/actions/payment";
 import RegisterForm from "../../Staff_routes/RegisterForm";
 import Upload_form from "../Upload_form";
 import { format } from "date-fns";

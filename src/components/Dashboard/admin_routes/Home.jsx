@@ -6,10 +6,12 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import Typography from "@mui/material/Typography";
+
 import {
+  getAccDetails,
   getAllTransactions,
   getPayableFarmers,
+  MakeSinglePayment,
 } from "../../../redux/actions/payment";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -23,7 +25,7 @@ const Home = ({ farmers, balance }) => {
     dispatch(getAllTransactions());
   }, []);
   const Transactions = useSelector((state) => state?.payment?.transactions);
-  let filterNum = Transactions?.length - 7; /* filter from */
+  let filterNum = Transactions?.length - 7; // filter from
   const recentTransactions = Transactions?.slice(
     filterNum,
     Transactions?.length
@@ -66,6 +68,7 @@ const Home = ({ farmers, balance }) => {
         toast.success(data.message);
         setPayButtonLoading(false);
         dispatch(getPayableFarmers());
+        dispatch(getAccDetails());
       }
     } catch (error) {
       console.log(error);
@@ -73,6 +76,12 @@ const Home = ({ farmers, balance }) => {
       setPayButtonLoading(false);
     }
   };
+  // pay single farmer
+  const handleSinglePayment = async (farmerId) => {
+    dispatch(MakeSinglePayment(farmerId));
+  };
+  const payment_msg = useSelector((state) => state?.payment?.msg);
+  console.log("payment_msg", payment_msg);
   return (
     <section className="space-y-5">
       <div className="grid grid-cols-3 gap-5">
@@ -111,12 +120,6 @@ const Home = ({ farmers, balance }) => {
             <span className="text-xl font-bold ">{allStaff?.length || 0}</span>
           </div>
         </div>{" "}
-        {/* <div className="shadow  rounded text-lg bg-white py-5 px-2 text-center space-y-8">
-          <div>Total Staff</div>
-          <div>
-            <span className="text-xl ">5</span>
-          </div>
-        </div> */}
       </div>
       <div>
         <Accordion>
@@ -159,9 +162,9 @@ const Home = ({ farmers, balance }) => {
                       <th className="text-start py-2">Email</th>
                       <th className="text-start py-2">Phone No</th>
                       <th className="text-start py-2">Gender</th>
-
                       <th className="text-start py-2">Kg(s)</th>
                       <th className="text-start py-2">Amount (Ksh)</th>
+                      <th className="text-start py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-start">
@@ -194,6 +197,37 @@ const Home = ({ farmers, balance }) => {
                             {totalKilos?.toLocaleString()}
                           </td>
                           <td className="py-3">{value?.toLocaleString()}</td>
+                          <td className="py-3">
+                            <button
+                              onClick={() => handleSinglePayment(_id)}
+                              className={
+                                value == 0
+                                  ? "hidden"
+                                  : "flex items-center space-x-1 bg-green-500 text-white  rounded p-1"
+                              }
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-6 h-6 "
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3V15"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                              <span>Pay</span>
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}

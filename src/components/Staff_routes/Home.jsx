@@ -6,7 +6,11 @@ import Upload_form from "../Dashboard/Upload_form";
 
 import axios from "axios";
 import toast from "react-hot-toast";
-import { getAccDetails, getPayableFarmers } from "../../redux/actions/payment";
+import {
+  getAccDetails,
+  getPayableFarmers,
+  MakeSinglePayment,
+} from "../../redux/actions/payment";
 import { authToken, getAllFarmers } from "../../redux/actions/auth";
 
 import Accordion from "@mui/material/Accordion";
@@ -50,6 +54,7 @@ const Home = () => {
   }, [payableFarmers]);
   console.log("payableBtn is", payableBtn);
   // handle payment for all
+  // notify manager to pay all
   // const [buttonLoading, setbuttonLoading] = useState(false);
   const [approvedBtn, setApprovedBtn] = useState(false);
   const [waitingApproval, setwWaitingApproval] = useState(false);
@@ -61,13 +66,11 @@ const Home = () => {
       );
       const data = await response.data;
       toast.success(data.message);
-      // setTimeout(() => {
-      //   setbuttonLoading(false);
-      // }, 4000);
     } catch (error) {
       console.log(error);
     }
   };
+
   // refresh
   const [spinSvg, setSpinSvg] = useState(false);
   const refresh = () => {
@@ -85,8 +88,10 @@ const Home = () => {
   useEffect(() => {
     if (approval_msg === "approved") {
       setApprovedBtn(true);
+      setSingleApprovalBtn(true);
     } else {
       setApprovedBtn(false);
+      setSingleApprovalBtn(false);
     }
   }, [approval_msg]);
   console.log("approvedBtn is", approvedBtn);
@@ -121,7 +126,25 @@ const Home = () => {
       toast.error(error.response.data.message);
     }
   };
-  const [payButtonLoading, setPayButtonLoading] = useState(false);
+  // handle single payment
+  // notify manager to pay single farmer
+  const [singleApprovalWaiting, setSingleApprovalWaiting] = useState(false);
+  const [singleApprovalBtn, setSingleApprovalBtn] = useState(false);
+  const requestSinglePaymentApproval = async (farmerId) => {
+    setSingleApprovalWaiting(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:4000/payment/notify-single-payment/${farmerId}`,
+        authToken()
+      );
+      const data = await response.data;
+      toast.success(data.message);
+      dispatch(getPayableFarmers());
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
   return (
     <div className="space-y-8">
       <div>
@@ -160,12 +183,15 @@ const Home = () => {
                         onClick={waitingApproval ? refresh : requestApproval}
                         className={
                           waitingApproval
-                            ? "bg-yellow-400 p-2 rounded text-white text-lg"
+                            ? "bg-yellow-400 p-2 rounded text-white text-lg relative"
                             : "bg-gray-100 hover:bg-gray-100 text-black p-2 rounded"
                         }
                       >
                         {waitingApproval ? (
                           <div className="flex justify-center items-center space-x-2">
+                            <span className="absolute -top-6 left-0 text-black">
+                              keep refreshing..
+                            </span>
                             <span>Pending Approval</span>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -199,9 +225,9 @@ const Home = () => {
                       <th className="text-start py-2">Email</th>
                       <th className="text-start py-2">Phone No</th>
                       <th className="text-start py-2">Gender</th>
-
                       <th className="text-start py-2">Kg(s)</th>
                       <th className="text-start py-2">Amount (Ksh)</th>
+                      <th className="text-start py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-start">
@@ -218,6 +244,7 @@ const Home = () => {
                         phone_number,
                         totalKilos,
                         gender,
+                        paymentRequest,
                       } = payableFarmer;
                       const fullname = `${firstname} ${lastname}`;
                       return (
@@ -234,6 +261,29 @@ const Home = () => {
                             {totalKilos?.toLocaleString()}
                           </td>
                           <td className="py-3">{value?.toLocaleString()}</td>
+                          <td className="py-3">
+                            {paymentRequest === "not sent" ? (
+                              <button
+                                onClick={() =>
+                                  requestSinglePaymentApproval(_id)
+                                }
+                                className="flex items-center space-x-1 bg-green-500 text-white  rounded p-1"
+                              >
+                                <span>Pay</span>
+                              </button>
+                            ) : paymentRequest === "waiting" ? (
+                              <button className="flex items-center space-x-1 bg-yellow-500 text-white  rounded p-1">
+                                <span>Pending</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => dispatch(MakeSinglePayment(_id))}
+                                className="flex items-center space-x-1 bg-blue text-white  rounded p-1"
+                              >
+                                <span>Approved pay now</span>
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -294,7 +344,7 @@ const Home = () => {
                   <td className="py-3">{phone_number}</td>
                   <td className="py-3">{totalKilos}</td>
 
-                  <td className="py-3 flex space-x-4">
+                  <td className="py-3">
                     <button
                       // onClick={() => handleModal(fullName, _id)}
                       // onClick={handleModal}
@@ -321,36 +371,6 @@ const Home = () => {
                         />
                       </svg>
                       <span>upload</span>
-                    </button>
-                    <button
-                      // onClick={() => openUploadModal(farmer)}
-
-                      className={
-                        value == 0
-                          ? "hidden"
-                          : "flex items-center space-x-1 bg-green-500 text-white  rounded p-1"
-                      }
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-6 h-6 "
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3V15"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      <span>Pay</span>
                     </button>
                   </td>
                 </tr>

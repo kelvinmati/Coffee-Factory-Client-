@@ -21,23 +21,24 @@ export const getPayableFarmers = () => async (dispatch) => {
   }
 };
 
-// make payment
-export const makePayment = (farmerId) => async (dispatch) => {
+// make single payment
+export const MakeSinglePayment = (farmerId) => async (dispatch) => {
   try {
     const response = await axios.get(`${PAYMENT_API}/pay/${farmerId}`);
     const data = await response.data;
     if (data) {
       dispatch({
-        type: types.PAYMENT_SUCCESS,
+        type: types.SINGLE_PAYMENT,
         payload: data,
       });
       toast.success(data.message);
-      dispatch(getAllFarmers());
+      dispatch(getAccDetails());
+      dispatch(getPayableFarmers());
     }
   } catch (error) {
-    dispatch(getErrors(error.response.data.message, types.PAYMENT_FAIL));
+    // dispatch(getErrors(error.response.data.message, types.PAYMENT_FAIL));
     toast.error(error.response.data.message);
-    // console.log(error);
+    console.log(error);
   }
 };
 // get all transactions

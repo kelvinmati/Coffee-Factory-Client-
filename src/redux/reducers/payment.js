@@ -17,7 +17,12 @@ export const paymentReducer = (state = initialState, action) => {
         loading: false,
         payable_farmers: action.payload,
       };
-    case types.PAYMENT_SUCCESS:
+    // case types.PAYMENT_SUCCESS:
+    //   return {
+    //     ...state,
+    //     msg: action.payload,
+    //   };
+    case types.SINGLE_PAYMENT:
       return {
         ...state,
         msg: action.payload,

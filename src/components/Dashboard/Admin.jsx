@@ -40,6 +40,7 @@ const Admin = () => {
   const notification = useSelector(
     (state) => state?.payment?.account_details?.paymentApproval
   );
+  console.log("notification is", notification);
   // console.log("notification is", notification);
   // notification sidebar
   const [sideBar, setSideBar] = useState(false);
@@ -121,21 +122,62 @@ const Admin = () => {
       setDepositAmount("");
     }
   };
-  // approve payment
-  const approvePayment = async () => {
+  // approve multiple payment
+  const approveMultiplePayment = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:4000/payment/approve-payment"
+        "http://localhost:4000/payment/approve-multiple-payments"
       );
       const data = response.data;
       // console.log("approval data is ", data);
       toast.success(data?.message);
+      dispatch(getAccDetails());
     } catch (error) {
       console.log(error);
 
       toast.error(error.response.data.message);
     }
   };
+
+  // approve payment
+  const approvePayment = async (requestId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:4000/payment/approve-payment/${requestId}`
+      );
+      const data = await response.data;
+      if (data) {
+        toast.success(data.message);
+        getRequests();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
+  // get requests
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    getRequests();
+  }, []);
+
+  const getRequests = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:4000/payment/requests",
+        authToken()
+      );
+      const data = await response.data;
+      if (data) {
+        setRequests(data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  console.log("requests are", requests);
   return (
     <section className="">
       <div
@@ -337,7 +379,7 @@ const Admin = () => {
                   viewBox="0 0 24 24"
                   strokeWidth={1.5}
                   stroke="currentColor"
-                  className="w-7 h-7"
+                  className="w-7 h-7 text-red"
                 >
                   <path
                     strokeLinecap="round"
@@ -345,9 +387,11 @@ const Admin = () => {
                     d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
                   />
                 </svg>
-                <span className="absolute p-2 -top-1.5 -right-2 bg-red text-white shadow-lg w-5 h-5 rounded-full flex justify-center items-center ">
-                  <p>2</p>
-                </span>
+                {/* <span className="absolute p-2 -top-1.5 -right-2 bg-red text-white shadow-lg w-5 h-5 rounded-full flex justify-center items-center ">
+                  <p>
+                    {requests?.length || notification !== "approved" ? 1 : 0}
+                  </p>
+                </span> */}
               </button>
             </div>
           </div>
@@ -370,7 +414,7 @@ const Admin = () => {
         </main>
       </div>
       {/* notification */}
-      <div
+      {/* <div
         className={
           sideBar
             ? "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[0rem]  transition-all top-[85px] bg-white h-screen w-[300px]"
@@ -398,6 +442,78 @@ const Admin = () => {
             Approve
           </button>
           <button className="p-2 bg-red text-white rounded">Reject</button>
+        </div>
+      </div> */}
+
+      <div
+        className={
+          sideBar
+            ? "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[0rem]  transition-all top-[85px] bg-white h-screen  w-[300px]"
+            : "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[20rem] transition-all top-[85px] bg-white h-screen  w-[300px]"
+        }
+      >
+        <div className="flex justify-between items-center">
+          <div className="text-lg font-bold">Payment Requests</div>
+          <div
+            onClick={() => setSideBar(false)}
+            className="hover:bg-gray-200 cursor-pointer bg-gray-100 w-8 h-8 flex justify-center items-center rounded-full"
+          >
+            X
+          </div>
+        </div>
+
+        <div
+          className={
+            notification === "approved"
+              ? "hidden"
+              : "flex flex-col bg-black text-white p-2 rounded space-y-2"
+          }
+        >
+          <p className="text-lg">Bulk disbursment</p>
+          <p> {notification}</p>
+          <button
+            onClick={approveMultiplePayment}
+            className="p-2 px-5 bg-green-500 text-white rounded"
+          >
+            Approve
+          </button>
+        </div>
+        <div className="space-y-5">
+          {requests?.length == 0
+            ? ""
+            : requests?.map((request) => {
+                const { _id, request_amount, sender_name, status, createdAt } =
+                  request;
+                return (
+                  <div
+                    key={_id}
+                    className="shadow p-2 space-y-2 rounded bg-gray-50"
+                  >
+                    <div>
+                      <p>
+                        From:<span>{sender_name}</span>
+                      </p>
+                      <p>
+                        Request amount:<span>Ksh {request_amount}</span>
+                      </p>
+                      <p>
+                        Status: <span>{status}</span>{" "}
+                      </p>
+                    </div>
+                    <div className="space-x-5">
+                      <button
+                        onClick={() => approvePayment(_id)}
+                        className="p-2 px-5 bg-green-500 text-white rounded"
+                      >
+                        Approve
+                      </button>
+                      <button className="p-2 px-5 bg-red text-white rounded">
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
         </div>
       </div>
       {/*deposit modal */}
