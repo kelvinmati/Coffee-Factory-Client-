@@ -2,7 +2,14 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 import * as types from "../Types";
-import { getErrors, loginFail } from "./errors";
+import {
+  clearErrors,
+  coffeeUploadFail,
+  getErrors,
+  loginFail,
+  searchUserFail,
+} from "./errors";
+import { getPayableFarmers } from "./payment";
 const AUTH_API = "http://localhost:4000/user";
 // Authentication using the stored token
 export const authToken = () => {
@@ -71,8 +78,9 @@ export const registerUser = (payload) => async (dispatch) => {
       // localStorage.setItem("userToken", data?.token);
       // dispatch(getErrors(error.response.data, types.REGISTER_SUCCESS));
       toast.success(data.message);
-      // dispatch(getAllStaff());
-      // dispatch(getAllFarmers());
+      dispatch(getAllStaff());
+      dispatch(getAllFarmers());
+      dispatch(clearErrors());
     }
   } catch (error) {
     console.log(error.response.data);
@@ -225,6 +233,7 @@ export const deleteUser = (user_id) => async (dispatch) => {
     });
     toast.success(data.message);
     dispatch(getAllFarmers());
+    dispatch(getAllStaff());
     dispatch({
       type: types.CLEAR_SUCCESS_MSG,
     });
@@ -235,6 +244,7 @@ export const deleteUser = (user_id) => async (dispatch) => {
 // coffee upload
 export const coffeeUpload = (farmerId, payload) => async (dispatch) => {
   const { coffee_type, quantity } = payload;
+
   // config
   const config = {
     headers: {
@@ -262,11 +272,43 @@ export const coffeeUpload = (farmerId, payload) => async (dispatch) => {
       });
       toast.success(data.message);
       dispatch(getAllFarmers());
+      dispatch(getPayableFarmers());
       dispatch({
         type: types.CLEAR_SUCCESS_MSG,
       });
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
+    dispatch(getErrors(error.response.data.message, types.COFFEE_UPLOAD_FAIL));
+    dispatch(coffeeUploadFail());
+    toast.error(error.response.data.message);
   }
+};
+
+// search user
+export const searchUser = (searchText) => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      `http://localhost:4000/user/search/${searchText}`,
+      authToken()
+    );
+    const data = await response.data;
+    if (data) {
+      dispatch({
+        type: types.SEARCH_USER,
+        payload: data,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    dispatch(getErrors(error.response.data.message, types.SEARCH_USER_FAIL));
+    dispatch(searchUserFail());
+    toast.error(error.response.data.message);
+  }
+};
+// clear user searched
+export const clearUserSearched = () => {
+  return {
+    type: types.CLEAR_USER_SEARCH,
+  };
 };

@@ -211,7 +211,6 @@ const Farmers = ({ farmers, currentUser }) => {
       </div>
 
       {/* delete modal */}
-      {/* modal */}
       <div
         className={
           deleteModal
@@ -219,20 +218,20 @@ const Farmers = ({ farmers, currentUser }) => {
             : "hidden"
         }
       >
-        <div className="bg-white space-y-8 p-4 w-mobile md:w-[450px]  rounded shadow">
-          <h2 className="text-xl  text-center">
+        <div className="bg-white space-y-3 p-4 w-mobile md:w-[450px]  rounded shadow">
+          <h2 className="text-lg font-bold ">
             Are you sure you want to delete {firstname?.concat(" ", lastname)}?
           </h2>
+          <p>This action cannot be undone!</p>
 
           <div className="flex justify-end space-x-2">
+            <div
+              onClick={() => setdeleteModal(false)}
+              className="cursor-pointer bg-gray-200  p-2 rounded-lg"
+            >
+              Cancel
+            </div>
             <button
-              // type="submit"
-              // disabled={amount == "" ? true : false}
-              // className={
-              //   amount == ""
-              //     ? "bg-blue opacity-50 text-white p-2 rounded-lg"
-              //     : "bg-blue  text-white p-2 rounded-lg"
-              // }
               className="bg-red  text-white p-2 rounded-lg"
               onClick={handleDelete}
             >
@@ -242,15 +241,9 @@ const Farmers = ({ farmers, currentUser }) => {
                   <span>Deleting..</span>
                 </div>
               ) : (
-                <div>Yes</div>
+                <div>Yes,delete</div>
               )}
             </button>
-            <div
-              onClick={() => setdeleteModal(false)}
-              className="cursor-pointer bg-gray-200  p-2 rounded-lg"
-            >
-              No
-            </div>
           </div>
         </div>
       </div>

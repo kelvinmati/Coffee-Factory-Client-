@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
-import { getAllStaff } from "../../../redux/actions/auth";
+import { deleteUser, getAllStaff } from "../../../redux/actions/auth";
 import RegisterForm from "../../Staff_routes/RegisterForm";
 import { format } from "date-fns";
 import UpdateModal from "../UpdateModal";
@@ -21,7 +21,30 @@ const Staff = () => {
   });
   const allStaff = useSelector((state) => state?.auth?.staff);
   // console.log("staff are", allStaff);
+  // delete modal
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteModal, setdeleteModal] = useState(false);
+  const [user, setUser] = useState({});
+  const { _id, firstname, lastname } = user;
+  const showDeleteModal = (user) => {
+    setdeleteModal(true);
+    setUser(user);
+  };
+  // console.log(firstname);
 
+  // delete functionality
+  const handleDelete = () => {
+    setDeleteLoading(true);
+    dispatch(deleteUser(_id));
+  };
+  const success_msg = useSelector((state) => state?.auth?.msg);
+  // console.log(" success_msg is", success_msg);
+  useEffect(() => {
+    if (success_msg == "User succesfully deleted") {
+      setDeleteLoading(false);
+      setdeleteModal(false);
+    }
+  }, [success_msg]);
   // update modal
   const [updateModal, setUpdateModal] = useState(false);
   const [userDetails, setuserDetails] = useState({});
@@ -112,7 +135,7 @@ const Staff = () => {
                         />
                       </svg>
                     </button>
-                    <button>
+                    <button onClick={() => showDeleteModal(staf)}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -134,6 +157,43 @@ const Staff = () => {
             })}
           </tbody>
         </table>
+      </div>
+      {/* delete modal */}
+      <div
+        className={
+          deleteModal
+            ? "fixed h-full bg-[rgba(0,0,0,0.34)] flex flex-col   items-center  left-0 right-0 top-0 bottom-0 pt-24"
+            : "hidden"
+        }
+      >
+        <div className="bg-white space-y-3 p-4 w-mobile md:w-[450px]  rounded shadow">
+          <h2 className="text-lg font-bold ">
+            Are you sure you want to delete {firstname?.concat(" ", lastname)}?
+          </h2>
+          <p>This action cannot be undone!</p>
+
+          <div className="flex justify-end space-x-2">
+            <div
+              onClick={() => setdeleteModal(false)}
+              className="cursor-pointer bg-gray-200  p-2 rounded-lg"
+            >
+              Cancel
+            </div>
+            <button
+              className="bg-red  text-white p-2 rounded-lg"
+              onClick={handleDelete}
+            >
+              {deleteLoading ? (
+                <div className="flex justify-center items-center space-x-2">
+                  <div className="border-2 border-r-3  border-r-gray-600 animate-spin rounded-full w-5 h-5"></div>
+                  <span>Deleting..</span>
+                </div>
+              ) : (
+                <div>Yes,delete</div>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
       {/* Farmer register form */}
       <div

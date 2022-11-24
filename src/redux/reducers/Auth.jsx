@@ -10,6 +10,7 @@ const initialState = {
   current_user: null,
   updateLoading: true,
   isSucessful: false,
+  search_result: null,
 };
 export const AuthReducer = (state = initialState, action) => {
   switch (action.type) {
@@ -64,6 +65,16 @@ export const AuthReducer = (state = initialState, action) => {
       return {
         ...state,
         msg: null,
+      };
+    case types.SEARCH_USER:
+      return {
+        ...state,
+        search_result: action.payload,
+      };
+    case types.CLEAR_USER_SEARCH:
+      return {
+        ...state,
+        search_result: null,
       };
     default:
       return state;

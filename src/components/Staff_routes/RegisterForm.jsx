@@ -23,34 +23,36 @@ const RegisterForm = ({ setRegisterModal }) => {
   const [buttonLoading, setbuttonLoading] = useState(false);
   // getting input values using react hook form
   const onSubmit = (data) => {
-    console.log(data);
-    dispatch(registerUser(data));
     setbuttonLoading(true);
+    dispatch(registerUser(data));
   };
-  //   get error & success msg from the state
-  const error = useSelector((state) => state?.errors);
   //   console.log("Register error", error);
 
-  const success = useSelector((state) => state?.auth?.msg);
-  //   console.log("Register success", success);
-
+  //   get error msg from the state
+  const error = useSelector((state) => state?.errors);
+  // console.log("error is", error);
   useEffect(() => {
     if (error.typeId === "REGISTER_FAIL") {
       setbuttonLoading(false);
+      setRegisterModal(false);
     } else {
-      setbuttonLoading(false);
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (success === "Succesfully registered") {
       setbuttonLoading(false);
       setRegisterModal(false);
-      window.location.reload(false);
-    } else {
-      setbuttonLoading(false);
     }
-  }, [success]);
+  }, [error]);
+  // get  success msg from the state
+  // const success = useSelector((state) => state?.auth?.msg);
+  // console.log("Register success", success);
+  // useEffect(() => {
+  //   if (success == "Succesfully registered") {
+  //     setbuttonLoading(false);
+  //     setRegisterModal(false);
+  //     // window.location.reload(false);
+  //   } else {
+  //     setbuttonLoading(false);
+  //     setRegisterModal(false);
+  //   }
+  // }, [success]);
   return (
     <div>
       <div className="flex justify-between my-3 items-center">

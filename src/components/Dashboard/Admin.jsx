@@ -21,7 +21,9 @@ import { Modal } from "@mui/material";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Profile from "./Profile";
-import { getAccDetails } from "../../redux/actions/payment";
+import { getAccDetails, rejectedRequest } from "../../redux/actions/payment";
+import WaitingRequests from "./admin_routes/WaitingRequests";
+import RejectedRequests from "./admin_routes/RejectedRequests";
 
 const Admin = () => {
   const dispatch = useDispatch();
@@ -36,11 +38,15 @@ const Admin = () => {
   useEffect(() => {
     dispatch(getAccDetails());
   }, []);
-  // notification
+  // payment status
   const notification = useSelector(
     (state) => state?.payment?.account_details?.paymentApproval
   );
-  console.log("notification is", notification);
+  // approval amoun
+  const approvalAmount = useSelector(
+    (state) => state?.payment?.account_details?.approvalAmount
+  );
+  console.log("approvalAmount is", approvalAmount);
   // console.log("notification is", notification);
   // notification sidebar
   const [sideBar, setSideBar] = useState(false);
@@ -149,15 +155,48 @@ const Admin = () => {
       if (data) {
         toast.success(data.message);
         getRequests();
+        dispatch(rejectedRequest());
       }
     } catch (error) {
       console.log(error);
       toast.error(error.response.data.message);
     }
   };
-  // get requests
+  // reject multiple payments
+  const rejectMultiple = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:4000/payment/reject-multiple-payment",
+        authToken()
+      );
+      const data = await response.data;
+      if (data) {
+        toast.success(data.message);
+        dispatch(getAccDetails());
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
+  // reject single payment
+  const rejectSinglePayment = async (requestId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:4000/payment/reject-single-payment/${requestId}`
+      );
+      const data = await response.data;
+      if (data) {
+        toast.error(data.message);
+        getRequests();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
+  // get pending requests
   const [requests, setRequests] = useState([]);
-
   useEffect(() => {
     getRequests();
   }, []);
@@ -176,8 +215,6 @@ const Admin = () => {
       console.log(error);
     }
   };
-
-  console.log("requests are", requests);
   return (
     <section className="">
       <div
@@ -199,7 +236,8 @@ const Admin = () => {
             <li
               // className="flex items-center  space-x-2 rounded px-3 py-2 hover:bg-gray-50 hover:text-black"
               className={
-                path == "/dashboard/admin"
+                path == "/dashboard/admin" ||
+                path == "/dashboard/admin/rejected"
                   ? "flex items-center  space-x-2 rounded px-3 py-2 my-1.5  hover:bg-gray-50 bg-gray-50 hover:text-black text-black"
                   : "flex items-center  space-x-2 rounded px-3 py-2 my-1.5 hover:bg-gray-50 hover:text-black"
               }
@@ -400,7 +438,7 @@ const Admin = () => {
           </div>
           <Routes>
             <Route
-              path="/"
+              path="/*"
               element={<Home farmers={farmers} balance={balance} />}
             />
             <Route path="/staff" element={<Staff />} />
@@ -414,107 +452,73 @@ const Admin = () => {
         </main>
       </div>
       {/* notification */}
-      {/* <div
-        className={
-          sideBar
-            ? "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[0rem]  transition-all top-[85px] bg-white h-screen w-[300px]"
-            : "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[20rem] transition-all top-[85px] bg-white h-screen w-[300px]"
-        }
-      >
-        <div className="flex justify-between items-center">
-          <div className="text-lg">Pending approval</div>
-          <div
-            onClick={() => setSideBar(false)}
-            className="hover:bg-gray-200 cursor-pointer bg-gray-100 w-8 h-8 flex justify-center items-center rounded-full"
-          >
-            X
-          </div>
-        </div>
-        <i>{notification}</i>
-        <p className="font-bold">
-          Confirm account balance before making approval.
-        </p>
-        <div className="flex  space-x-4">
-          <button
-            onClick={approvePayment}
-            className="p-2 bg-green-500 text-white rounded"
-          >
-            Approve
-          </button>
-          <button className="p-2 bg-red text-white rounded">Reject</button>
-        </div>
-      </div> */}
-
       <div
         className={
           sideBar
-            ? "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[0rem]  transition-all top-[85px] bg-white h-screen  w-[300px]"
-            : "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[20rem] transition-all top-[85px] bg-white h-screen  w-[300px]"
+            ? "absolute shadow p-2 space-y-5 flex flex-col right-0 translate-x-[0rem]  transition-all top-[85px] bg-gray-100 h-full overflow-auto   w-[300px]"
+            : "fixed shadow p-2 space-y-5 flex flex-col right-0 translate-x-[20rem] transition-all top-[85px] bg-white h-screen  w-[300px]"
         }
       >
         <div className="flex justify-between items-center">
           <div className="text-lg font-bold">Payment Requests</div>
           <div
             onClick={() => setSideBar(false)}
-            className="hover:bg-gray-200 cursor-pointer bg-gray-100 w-8 h-8 flex justify-center items-center rounded-full"
+            className=" cursor-pointer bg-white hover:shadow-lg w-8 h-8 flex justify-center items-center rounded-full"
           >
             X
           </div>
         </div>
-
-        <div
-          className={
-            notification === "approved"
-              ? "hidden"
-              : "flex flex-col bg-black text-white p-2 rounded space-y-2"
-          }
-        >
-          <p className="text-lg">Bulk disbursment</p>
-          <p> {notification}</p>
-          <button
-            onClick={approveMultiplePayment}
-            className="p-2 px-5 bg-green-500 text-white rounded"
+        <div className="bg-white rounded-full flex justify-evenly items-center">
+          <Link
+            to="/dashboard/admin"
+            className={
+              path == "/dashboard/admin"
+                ? "bg-gray-300 w-full p-2  rounded-full text-center"
+                : " w-full p-2  rounded-full text-center"
+            }
           >
-            Approve
-          </button>
+            <button>Waiting</button>
+          </Link>
+          <Link
+            to="/dashboard/admin/rejected"
+            className={
+              path == "/dashboard/admin/rejected"
+                ? "bg-gray-300 w-full p-2  rounded-full text-center"
+                : " w-full p-2  rounded-full text-center"
+            }
+          >
+            <button>Rejected</button>
+          </Link>
         </div>
-        <div className="space-y-5">
-          {requests?.length == 0
-            ? ""
-            : requests?.map((request) => {
-                const { _id, request_amount, sender_name, status, createdAt } =
-                  request;
-                return (
-                  <div
-                    key={_id}
-                    className="shadow p-2 space-y-2 rounded bg-gray-50"
-                  >
-                    <div>
-                      <p>
-                        From:<span>{sender_name}</span>
-                      </p>
-                      <p>
-                        Request amount:<span>Ksh {request_amount}</span>
-                      </p>
-                      <p>
-                        Status: <span>{status}</span>{" "}
-                      </p>
-                    </div>
-                    <div className="space-x-5">
-                      <button
-                        onClick={() => approvePayment(_id)}
-                        className="p-2 px-5 bg-green-500 text-white rounded"
-                      >
-                        Approve
-                      </button>
-                      <button className="p-2 px-5 bg-red text-white rounded">
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-        </div>
+
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <WaitingRequests
+                approvalAmount={approvalAmount}
+                notification={notification}
+                approveMultiplePayment={approveMultiplePayment}
+                requests={requests}
+                approvePayment={approvePayment}
+                rejectMultiple={rejectMultiple}
+                rejectSinglePayment={rejectSinglePayment}
+              />
+            }
+          />
+          <Route
+            path="/rejected"
+            element={
+              <RejectedRequests
+                approveMultiplePayment={approveMultiplePayment}
+                approvePayment={approvePayment}
+                notification={notification}
+                approvalAmount={approvalAmount}
+                rejectMultiple={rejectMultiple}
+              />
+            }
+          />
+        </Routes>
       </div>
       {/*deposit modal */}
       <div

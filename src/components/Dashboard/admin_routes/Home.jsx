@@ -8,6 +8,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import {
+  clearPayableFarmers,
   getAccDetails,
   getAllTransactions,
   getPayableFarmers,
@@ -37,6 +38,7 @@ const Home = ({ farmers, balance }) => {
   const totalPaid = totalArr?.reduce((a, b) => {
     return a + b;
   });
+
   // console.log("total is", totalPaid);
 
   // load all payable farmers
@@ -67,7 +69,7 @@ const Home = ({ farmers, balance }) => {
       if (data) {
         toast.success(data.message);
         setPayButtonLoading(false);
-        dispatch(getPayableFarmers());
+        dispatch(clearPayableFarmers());
         dispatch(getAccDetails());
       }
     } catch (error) {

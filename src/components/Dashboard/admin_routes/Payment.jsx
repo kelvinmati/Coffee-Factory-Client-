@@ -42,9 +42,10 @@ const Payment = () => {
                 phone,
                 quantity,
               } = Transaction;
+
               return (
                 <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
-                  <td className="py-3 ">{farmerId}</td>
+                  <td className="py-3 ">{_id}</td>
 
                   <td className="py-3 ">{name}</td>
                   <td className="py-3">{phone}</td>

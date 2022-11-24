@@ -7,6 +7,7 @@ const initialState = {
   transaction: null,
   payable_farmers: [],
   account_details: null,
+  rejected_requests: null,
 };
 
 export const paymentReducer = (state = initialState, action) => {
@@ -17,11 +18,17 @@ export const paymentReducer = (state = initialState, action) => {
         loading: false,
         payable_farmers: action.payload,
       };
-    // case types.PAYMENT_SUCCESS:
-    //   return {
-    //     ...state,
-    //     msg: action.payload,
-    //   };
+    case types.CLEAR_PAYABLE_FARMERS:
+      return {
+        ...state,
+        loading: false,
+        payable_farmers: [],
+      };
+    case types.PAY_ALL_APPROVED:
+    // return {
+    //   ...state,
+    //   msg: action.payload,
+    // };
     case types.SINGLE_PAYMENT:
       return {
         ...state,
@@ -44,6 +51,12 @@ export const paymentReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         account_details: action.payload,
+      };
+    case types.GET_REJECTED_REQUESTS:
+      return {
+        ...state,
+        loading: false,
+        rejected_requests: action.payload,
       };
     default:
       return state;

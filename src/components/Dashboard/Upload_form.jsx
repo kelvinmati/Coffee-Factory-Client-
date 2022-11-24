@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { coffeeUpload } from "../../redux/actions/auth";
+import { clearErrors } from "../../redux/actions/errors";
 import { getPayableFarmers } from "../../redux/actions/payment";
 
 const Upload_form = ({ farmerInfo, closeUploadModal }) => {
@@ -22,10 +23,20 @@ const Upload_form = ({ farmerInfo, closeUploadModal }) => {
   const onSubmit = async (data) => {
     setbuttonLoading(true);
     dispatch(coffeeUpload(farmerInfo?._id, data));
-    dispatch(getPayableFarmers());
   };
   // stop button loading
   const success_msg = useSelector((state) => state?.auth?.msg);
+  const error = useSelector((state) => state?.errors?.msg?.typeId);
+  useEffect(() => {
+    if (error === "COFFEE_UPLOAD_FAIL") {
+      setbuttonLoading(false);
+      dispatch(clearErrors());
+      reset();
+    } else {
+      setbuttonLoading(false);
+    }
+  }, [error]);
+  console.log("error is", error);
   useEffect(() => {
     if (success_msg == "Succesfully uploaded") {
       setbuttonLoading(false);

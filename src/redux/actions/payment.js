@@ -4,8 +4,8 @@ import * as types from "../Types";
 import { authToken, getAllFarmers } from "./auth";
 import { getErrors } from "./errors";
 const PAYMENT_API = "http://localhost:4000/payment";
-// get payable farmers
 
+// get payable farmers
 export const getPayableFarmers = () => async (dispatch) => {
   try {
     const response = await axios.get(`${PAYMENT_API}/payable-farmers`);
@@ -20,7 +20,11 @@ export const getPayableFarmers = () => async (dispatch) => {
     console.log(error);
   }
 };
-
+export const clearPayableFarmers = () => {
+  return {
+    type: types.CLEAR_PAYABLE_FARMERS,
+  };
+};
 // make single payment
 export const MakeSinglePayment = (farmerId) => async (dispatch) => {
   try {
@@ -39,6 +43,28 @@ export const MakeSinglePayment = (farmerId) => async (dispatch) => {
     // dispatch(getErrors(error.response.data.message, types.PAYMENT_FAIL));
     toast.error(error.response.data.message);
     console.log(error);
+  }
+};
+// pay all after approval
+export const payAllAfterApproval = () => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      "http://localhost:4000/payment/pay-all",
+      authToken()
+    );
+    const data = await response.data;
+    if (data) {
+      dispatch({
+        type: types.PAY_ALL_APPROVED,
+        payload: data,
+      });
+      toast.success(data.message);
+      dispatch(clearPayableFarmers());
+      dispatch(getAllFarmers());
+      dispatch(getAccDetails());
+    }
+  } catch (error) {
+    toast.error(error.response.data.message);
   }
 };
 // get all transactions
@@ -82,6 +108,24 @@ export const getAccDetails = () => async (dispatch) => {
     if (data) {
       dispatch({
         type: types.GET_ACC_DETAILS,
+        payload: data,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+// get rejected requests
+export const rejectedRequest = () => async (dispatch) => {
+  try {
+    const response = await axios.get(
+      "http://localhost:4000/payment/rejected-requests",
+      authToken()
+    );
+    const data = await response.data;
+    if (data) {
+      dispatch({
+        type: types.GET_REJECTED_REQUESTS,
         payload: data,
       });
     }
