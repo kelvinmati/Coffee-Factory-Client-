@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  clearUserSearched,
   deleteUser,
   getAllFarmers,
   getSpecificFarmer,
+  searchUser,
 } from "../../../redux/actions/auth";
 // import { makePayment } from "../../../redux/actions/payment";
 import RegisterForm from "../../Staff_routes/RegisterForm";
@@ -13,6 +15,7 @@ import { format } from "date-fns";
 import axios from "axios";
 import toast from "react-hot-toast";
 import UpdateModal from "../UpdateModal";
+import { clearErrors } from "../../../redux/actions/errors";
 const Farmers = ({ farmers, currentUser }) => {
   const dispatch = useDispatch();
   const [registerModal, setRegisterModal] = useState(false);
@@ -56,10 +59,89 @@ const Farmers = ({ farmers, currentUser }) => {
     setuserDetails(user);
   };
   // console.log(" userDetails are", userDetails);
+  // search farmer
+  const [searchValue, setSearchValue] = useState("");
+  const [searchBtnLoading, setSearchBtnLoading] = useState(false);
+  const getSearchValue = (e) => {
+    // console.log(e.target.value);
+    setSearchValue(e.target.value);
+  };
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchBtnLoading(true);
+    dispatch(searchUser(searchValue));
+  };
+  // disable search button loading
+  const results = useSelector((state) => state?.auth?.search_result);
+  const error = useSelector((state) => state?.errors?.msg?.typeId);
+  console.log("errors are", error);
+  useEffect(() => {
+    if (results?.length > 0 || error === "SEARCH_USER_FAIL") {
+      setSearchBtnLoading(false);
+      dispatch(clearErrors());
+    } else {
+      setSearchBtnLoading(false);
+    }
+  }, [results, error]);
+  // handle back
+  const handleBack = () => {
+    dispatch(clearUserSearched());
+    // dispatch(getAllFarmers());
+  };
   return (
-    <section className="space-y-0">
+    <section className="space-y-5">
+      <div>
+        <form onSubmit={handleSearch} className="my-3 flex w-1/2">
+          <input
+            type="text"
+            required
+            onChange={getSearchValue}
+            placeholder="Search farmers by name or farmer ID here..."
+            className=" rounded-tl-full rounded-bl-full border border-blue focus:outline-none   p-2 rounded w-full border-r-transparent"
+          />
+          <button
+            type="submit"
+            className="bg-blue  p-2 text-white rounded-tr-full rounded-br-full"
+          >
+            {searchBtnLoading ? (
+              <div className="w-6 h-6 border-[2px] border-l-black border-dotted animate-spin rounded-full "></div>
+            ) : (
+              <span>Search</span>
+            )}
+          </button>
+        </form>
+      </div>
       <div className="flex justify-between items-center my-7">
-        <h2 className="text-2xl">Farmers List</h2>
+        <div className="text-xl text-blue py-3">
+          {results?.length > 0 ? (
+            <div>
+              <button
+                onClick={handleBack}
+                className="flex items-center space-x-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                  />
+                </svg>
+                <span>back to farmers</span>
+              </button>
+              {/* <p>Search results</p> */}
+            </div>
+          ) : (
+            <p>Farmers List</p>
+          )}
+        </div>
+        {/* <h2 className="text-2xl">Farmers List</h2> */}
         <div className="space-x-4">
           <button
             onClick={() => setRegisterModal(true)}
@@ -85,92 +167,181 @@ const Farmers = ({ farmers, currentUser }) => {
               <th className="text-start py-2">Action</th>
             </tr>
           </thead>
-          <tbody className="text-start">
-            {farmers?.map((farmer, index) => {
-              const even = index % 2 === 0;
-              // console.log("even is", even);
-              const {
-                _id,
-                firstname,
-                lastname,
-                phone_number,
-                email,
-                createdAt,
-                farmerId,
-                totalKilos,
-                paid,
-              } = farmer;
-              const fullName = firstname.concat(" ", lastname);
-              return (
-                <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
-                  <td className="py-3 ">{fullName}</td>
-                  <td className="py-3 ">{farmerId}</td>
-                  <td className="py-3 ">{email}</td>
-                  {/* <td className="py-3">{phone_number}</td> */}
-                  <td className="py-3">{totalKilos}</td>
-                  <td className="py-3">
-                    {/* {format(new Date(createdAt), "yyyy-MM-dd")} */}
-                    {format(
-                      new Date(createdAt),
-                      "do MMM yyyy HH:mm:ss aaaaa'm'"
-                    )}
-                  </td>
+          {results?.length > 0 ? (
+            <tbody className="text-start">
+              {results?.map((result, index) => {
+                const even = index % 2 === 0;
+                // console.log("even is", even);
+                const {
+                  _id,
+                  firstname,
+                  lastname,
+                  phone_number,
+                  email,
+                  createdAt,
+                  farmerId,
+                  totalKilos,
+                  paid,
+                } = result;
+                const fullName = firstname.concat(" ", lastname);
+                return (
+                  <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
+                    <td className="py-3 ">{fullName}</td>
+                    <td className="py-3 ">{farmerId}</td>
+                    <td className="py-3 ">{email}</td>
+                    {/* <td className="py-3">{phone_number}</td> */}
+                    <td className="py-3">{totalKilos}</td>
+                    <td className="py-3">
+                      {/* {format(new Date(createdAt), "yyyy-MM-dd")} */}
+                      {format(
+                        new Date(createdAt),
+                        "do MMM yyyy HH:mm:ss aaaaa'm'"
+                      )}
+                    </td>
 
-                  <td className="py-3 space-x-2 ">
-                    <button onClick={() => openUploadModal(farmer)}>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-6 h-6 text-blue"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3V15"
-                        />
-                      </svg>
-                    </button>
-                    <button onClick={() => showUpdateModal(farmer)}>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-6 h-6 "
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                        />
-                      </svg>
-                    </button>
+                    <td className="py-3 space-x-2 ">
+                      <button onClick={() => openUploadModal(result)}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 text-blue"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3V15"
+                          />
+                        </svg>
+                      </button>
+                      <button onClick={() => showUpdateModal(result)}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 "
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                          />
+                        </svg>
+                      </button>
 
-                    <button onClick={() => showDeleteModal(farmer)}>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-6 h-6 text-red"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                        />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
+                      <button onClick={() => showDeleteModal(farmer)}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 text-red"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                          />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          ) : (
+            <tbody className="text-start">
+              {farmers?.map((farmer, index) => {
+                const even = index % 2 === 0;
+                // console.log("even is", even);
+                const {
+                  _id,
+                  firstname,
+                  lastname,
+                  phone_number,
+                  email,
+                  createdAt,
+                  farmerId,
+                  totalKilos,
+                  paid,
+                } = farmer;
+                const fullName = firstname.concat(" ", lastname);
+                return (
+                  <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
+                    <td className="py-3 ">{fullName}</td>
+                    <td className="py-3 ">{farmerId}</td>
+                    <td className="py-3 ">{email}</td>
+                    {/* <td className="py-3">{phone_number}</td> */}
+                    <td className="py-3">{totalKilos}</td>
+                    <td className="py-3">
+                      {/* {format(new Date(createdAt), "yyyy-MM-dd")} */}
+                      {format(
+                        new Date(createdAt),
+                        "do MMM yyyy HH:mm:ss aaaaa'm'"
+                      )}
+                    </td>
+
+                    <td className="py-3 space-x-2 ">
+                      <button onClick={() => openUploadModal(farmer)}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 text-blue"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3V15"
+                          />
+                        </svg>
+                      </button>
+                      <button onClick={() => showUpdateModal(farmer)}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 "
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                          />
+                        </svg>
+                      </button>
+
+                      <button onClick={() => showDeleteModal(farmer)}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 text-red"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                          />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          )}
         </table>
       </div>
       {/* Farmer register form */}

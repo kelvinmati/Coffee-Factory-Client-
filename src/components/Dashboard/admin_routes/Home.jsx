@@ -83,16 +83,62 @@ const Home = ({ farmers, balance }) => {
     dispatch(MakeSinglePayment(farmerId));
   };
   const payment_msg = useSelector((state) => state?.payment?.msg);
-  console.log("payment_msg", payment_msg);
+  // console.log("payment_msg", payment_msg);
+  // get total quantity submitted
+  const [quantitySubmitted, setQuantitySubmitted] = useState(0);
+  const getQuantitySubmitted = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:4000/coffee/total-quantity-submitted",
+        authToken()
+      );
+      const data = await response.data;
+      setQuantitySubmitted(data);
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    getQuantitySubmitted();
+  }, []);
+
+  // get total quantity paid
+  const [quantityPaid, setQuantityPaid] = useState(0);
+  const getQuantityPaid = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:4000/coffee/total-quantity-paid",
+        authToken()
+      );
+      const data = await response.data;
+      setQuantityPaid(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    getQuantityPaid();
+  }, []);
   return (
     <section className="space-y-5">
       <div className="grid grid-cols-3 gap-5">
-        {/* <div className="shadow bg-yellow-400 rounded text-white text-lg  p-2 text-center space-y-2">
-          <div>Total quantity</div>
-          <div>
-            <span className="text-xl font-bold">20,000 Kgs</span>
+        <div className="shadow bg-yellow-400 rounded text-white text-lg  p-2 text-center space-y-2">
+          <div>Total quantity(Kgs)</div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white rounded text-black">
+              <h2>Submitted</h2>
+              <p>{quantitySubmitted}</p>
+            </div>
+            <div className="bg-white rounded text-black">
+              <h2>Paid</h2>
+              <p>{quantityPaid}</p>
+            </div>
           </div>
-        </div> */}
+          {/* <div>
+            <span className="text-xl font-bold">20,000 Kgs</span>
+          </div> */}
+        </div>
         <div className="shadow bg-orange rounded text-white text-lg  p-2 text-center space-y-2">
           <div>Total amount paid</div>
           <div>
@@ -271,9 +317,9 @@ const Home = ({ farmers, balance }) => {
               } = Transaction;
               return (
                 <tr key={_id} className={even ? "bg-gray-50 " : "bg-white"}>
-                  <td className="py-3 ">{farmerId}</td>
+                  <td className="py-3 ">{_id}</td>
                   <td className="py-3 ">{name}</td>
-                  <td className="py-3">{phone}</td>
+                  <td className="py-3">0{phone}</td>
                   <td className="py-3">{quantity}</td>
                   <td className="py-3">{amount}</td>
                   <td className="py-3">
